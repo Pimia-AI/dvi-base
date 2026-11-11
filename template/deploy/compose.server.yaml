@@ -1,0 +1,67 @@
+# El módulo «__NAME__» en el servidor del integrador, desde la imagen que construyó la CI (docs/api.md §22.3 del DVI y
+# docs/receta-servidor-integrador.md §2.1). Se copia a /opt/<proyecto>/compose.yaml, uno por destino (desarrollo, piloto,
+# producción). La imagen la fija el ejecutor por digest (DVI_IMAGE = <repositorio>@sha256:…); el gancho arranca sin construir
+# ni descargar: `docker compose -p <proyecto> --project-directory /opt/<proyecto> up -d --no-build --pull never`. El contenedor
+# del módulo es `<proyecto>-module-1` (el `container` del módulo en la configuración del ejecutor). Junto a este fichero va
+# postgres-init.sh, copia de packages/module/assets/postgres-init.sh de dvi-base: el servidor no necesita el código.
+# En .env (0640 root:dvi-executor, generado en el servidor): DVI_POSTGRES_PASSWORD, DVI_OWNER_PASSWORD, DVI_RUNTIME_PASSWORD,
+# PIMIA_BASE_URL, PIMIA_TENANT_ID, PIMIA_HOST_ORIGINS y MODULE_PORT (el puerto de 127.0.0.1 que sirve el proxy).
+x-module-image: &module_image ${DVI_IMAGE:?la pone el ejecutor (<repositorio>@sha256:…)}
+x-database: &database
+  DATABASE_URL: postgresql://__SCHEMA___runtime:${DVI_RUNTIME_PASSWORD:?falta .env}@postgres:5432/__SCHEMA__
+  DATABASE_OWNER_URL: postgresql://__SCHEMA___owner:${DVI_OWNER_PASSWORD:?falta .env}@postgres:5432/__SCHEMA__
+
+services:
+  postgres:
+    image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    environment:
+      POSTGRES_USER: dvi_admin
+      POSTGRES_PASSWORD: ${DVI_POSTGRES_PASSWORD:?falta .env}
+      POSTGRES_DB: postgres
+      MODULE_DB: __SCHEMA__
+      MODULE_OWNER_PASSWORD: ${DVI_OWNER_PASSWORD}
+      MODULE_RUNTIME_PASSWORD: ${DVI_RUNTIME_PASSWORD}
+    volumes:
+      - ./postgres-init.sh:/docker-entrypoint-initdb.d/10-module.sh:ro
+      - db:/var/lib/postgresql/data
+    networks: [interna]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dvi_admin -d __SCHEMA__"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  migrate:
+    image: *module_image
+    command: ["node", "server.cjs", "migrate"]
+    environment:
+      <<: *database
+    networks: [interna]
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: "no"
+
+  module:
+    image: *module_image
+    environment:
+      <<: *database
+      PIMIA_BASE_URL: ${PIMIA_BASE_URL:?falta .env}
+      PIMIA_TENANT_ID: ${PIMIA_TENANT_ID:?falta .env}
+      PIMIA_HOST_ORIGINS: ${PIMIA_HOST_ORIGINS:?falta .env}
+    read_only: true
+    tmpfs: [/tmp]
+    ports:
+      - "127.0.0.1:${MODULE_PORT:?falta .env}:3000"
+    networks: [interna, salida]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    restart: unless-stopped
+
+networks:
+  interna:
+    internal: true
+  salida: {}
+
+volumes:
+  db: {}

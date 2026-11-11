@@ -1,0 +1,172 @@
+{
+  "contract": "pimia-module-token/0.1",
+  "erp": {
+    "kind": "double",
+    "version": "pimia-double@0.1.0"
+  },
+  "module": {
+    "key": "dvi-base-notes",
+    "commit": "3859f1bd2760a402c494e7a502970f009e3f4494"
+  },
+  "ran_at": "2026-11-08T19:19:13.691Z",
+  "cases": [
+    {
+      "id": "authorized",
+      "title": "Acceso autorizado",
+      "checks": [
+        {
+          "label": "GET /api/session con su token, su empresa y su instancia",
+          "expected": {
+            "status": 200,
+            "error": null
+          },
+          "got": {
+            "status": 200,
+            "error": null
+          },
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "foreign-company-or-instance",
+      "title": "Empresa o instancia ajenas",
+      "checks": [
+        {
+          "label": "token de una empresa usado con otra",
+          "expected": {
+            "status": 403,
+            "error": "forbidden"
+          },
+          "got": {
+            "status": 403,
+            "error": "forbidden"
+          },
+          "ok": true
+        },
+        {
+          "label": "token de otra instancia",
+          "expected": {
+            "status": 403,
+            "error": "tenant_mismatch"
+          },
+          "got": {
+            "status": 403,
+            "error": "tenant_mismatch"
+          },
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "wrong-audience",
+      "title": "Audiencia equivocada",
+      "checks": [
+        {
+          "label": "token emitido para otro módulo",
+          "expected": {
+            "status": 401,
+            "error": "wrong_audience"
+          },
+          "got": {
+            "status": 401,
+            "error": "wrong_audience"
+          },
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "expired-or-revoked",
+      "title": "Token caducado o revocado",
+      "checks": [
+        {
+          "label": "caducado hace dos minutos",
+          "expected": {
+            "status": 401,
+            "error": "token_expired"
+          },
+          "got": {
+            "status": 401,
+            "error": "token_expired"
+          },
+          "ok": true
+        },
+        {
+          "label": "sesión de módulo revocada",
+          "expected": {
+            "status": 401,
+            "error": "token_revoked"
+          },
+          "got": {
+            "status": 401,
+            "error": "token_revoked"
+          },
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "module-retired",
+      "title": "Módulo retirado del plan",
+      "checks": [
+        {
+          "label": "el plan de la instancia ya no lleva el módulo",
+          "expected": {
+            "status": 403,
+            "error": "not_in_plan"
+          },
+          "got": {
+            "status": 403,
+            "error": "not_in_plan"
+          },
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "insufficient-scope",
+      "title": "Ámbito insuficiente",
+      "checks": [
+        {
+          "label": "POST /api/notes sin «notes:write»",
+          "expected": {
+            "status": 403,
+            "error": "insufficient_scope"
+          },
+          "got": {
+            "status": 403,
+            "error": "insufficient_scope"
+          },
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "erp-down",
+      "title": "ERP caído",
+      "checks": [
+        {
+          "label": "la instancia no contesta y no hay nada recordado",
+          "expected": {
+            "status": 503,
+            "error": "pimia_unavailable"
+          },
+          "got": {
+            "status": 503,
+            "error": "pimia_unavailable"
+          },
+          "ok": true
+        }
+      ],
+      "ok": true
+    }
+  ],
+  "result": "ok"
+}

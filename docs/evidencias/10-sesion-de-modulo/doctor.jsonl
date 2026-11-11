@@ -1,0 +1,16 @@
+{"check":"module.json","status":"ok","module":"dvi-base-notes","schema":"notes","screens":1}
+{"check":"migrations","status":"ok","files":1}
+{"check":"docker","status":"ok","version":"29.2.1"}
+{"check":"service:postgres","status":"ok","state":"running","health":"healthy"}
+{"check":"service:migrate","status":"ok","state":"exited","health":null}
+{"check":"service:pimia-double","status":"ok","state":"running","health":"healthy"}
+{"check":"service:module","status":"ok","state":"running","health":"healthy"}
+{"check":"service:dev-host","status":"ok","state":"running","health":"healthy"}
+{"check":"module:healthz","status":"ok"}
+{"check":"module:readyz","status":"ok"}
+{"check":"module:version","status":"ok","module":"dvi-base-notes","commit":null,"applied":1,"expected":1}
+{"check":"pimia:token","status":"ok","mode":"double","issuer":"pimia-double"}
+{"check":"module:session","status":"ok","user":"7","company":"1","tenant":"demo","scopes":["notes:read","notes:write"]}
+{"check":"ui","status":"ok","frameAncestors":"http://127.0.0.1:7161"}
+{"check":"host","status":"ok"}
+{"result":"ok"}

@@ -1,0 +1,226 @@
+{
+  "description": "Gramática común de las pantallas de un módulo propio (ui.screens; docs/modulos/sesion-de-modulo.md §8.1). La misma que readUi en dvi-base/packages/module/src/manifest.ts, más los topes de tamaño del ERP. Cada caso es una pantalla; 'erp' y 'manifest' dicen si la acepta cada lado.",
+  "limits": {
+    "max_screens": 20,
+    "id": "^[a-z][a-z0-9-]{0,40}$",
+    "title_max": 60,
+    "path": "^/app/[a-z0-9-]+(/[a-z0-9-]+)*$",
+    "path_max": 200,
+    "menu_group_max": 40,
+    "menu_icon": "^[a-z0-9-]{1,40}$",
+    "menu_order": [
+      0,
+      1000
+    ]
+  },
+  "cases": [
+    {
+      "screen": {
+        "id": "notes",
+        "title": "Notas",
+        "path": "/app/notes",
+        "menu": {
+          "group": "Ejemplo",
+          "icon": "notebook",
+          "order": 10
+        }
+      },
+      "erp": true,
+      "manifest": true
+    },
+    {
+      "screen": {
+        "id": "note-detail",
+        "title": "Nota",
+        "path": "/app/notes/detail"
+      },
+      "erp": true,
+      "manifest": true,
+      "note": "sin menu: existe pero no sale en el menú"
+    },
+    {
+      "screen": {
+        "id": "notes",
+        "title": "Notas",
+        "path": "/app/notes",
+        "menu": {
+          "group": "Ejemplo",
+          "icon": "notebook"
+        }
+      },
+      "erp": true,
+      "manifest": true,
+      "note": "order es opcional"
+    },
+    {
+      "screen": {
+        "id": "1notes",
+        "title": "Notas",
+        "path": "/app/notes"
+      },
+      "erp": false,
+      "manifest": false,
+      "note": "id que empieza por cifra"
+    },
+    {
+      "screen": {
+        "id": "notes",
+        "title": "  ",
+        "path": "/app/notes"
+      },
+      "erp": false,
+      "manifest": false,
+      "note": "título vacío"
+    },
+    {
+      "screen": {
+        "id": "notes",
+        "title": "Notas",
+        "path": "/notes"
+      },
+      "erp": false,
+      "manifest": false,
+      "note": "fuera de /app/"
+    },
+    {
+      "screen": {
+        "id": "notes",
+        "title": "Notas",
+        "path": "/app/"
+      },
+      "erp": false,
+      "manifest": false,
+      "note": "sin segmento"
+    },
+    {
+      "screen": {
+        "id": "notes",
+        "title": "Notas",
+        "path": "/app/notes/"
+      },
+      "erp": false,
+      "manifest": false,
+      "note": "barra final"
+    },
+    {
+      "screen": {
+        "id": "notes",
+        "title": "Notas",
+        "path": "/app//notes"
+      },
+      "erp": false,
+      "manifest": false
+    },
+    {
+      "screen": {
+        "id": "notes",
+        "title": "Notas",
+        "path": "/app/../admin"
+      },
+      "erp": false,
+      "manifest": false
+    },
+    {
+      "screen": {
+        "id": "notes",
+        "title": "Notas",
+        "path": "/app/Notes"
+      },
+      "erp": false,
+      "manifest": false,
+      "note": "mayúsculas"
+    },
+    {
+      "screen": {
+        "id": "notes",
+        "title": "Notas",
+        "path": "/app/notes?x=1"
+      },
+      "erp": false,
+      "manifest": false
+    },
+    {
+      "screen": {
+        "id": "notes",
+        "title": "Notas",
+        "path": "/app/notes",
+        "menu": {
+          "group": "Ejemplo"
+        }
+      },
+      "erp": false,
+      "manifest": false,
+      "note": "menu sin icon"
+    },
+    {
+      "screen": {
+        "id": "notes",
+        "title": "Notas",
+        "path": "/app/notes",
+        "menu": {
+          "group": "Ejemplo",
+          "icon": "notebook",
+          "order": 1.5
+        }
+      },
+      "erp": false,
+      "manifest": false,
+      "note": "order no entero"
+    },
+    {
+      "screen": {
+        "id": "notes",
+        "title": "Notas",
+        "path": "/app/notes",
+        "menu": {
+          "group": "Ejemplo",
+          "icon": "Notebook.svg"
+        }
+      },
+      "erp": false,
+      "manifest": true,
+      "note": "icon: el ERP exige un nombre de lucide; readManifest solo pide texto"
+    },
+    {
+      "screen": {
+        "id": "notes",
+        "title": "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+        "path": "/app/notes"
+      },
+      "erp": false,
+      "manifest": true,
+      "note": "título de 61: tope del ERP"
+    },
+    {
+      "screen": {
+        "id": "notes",
+        "title": "Notas",
+        "path": "/app/notes",
+        "menu": {}
+      },
+      "erp": false,
+      "manifest": false,
+      "note": "menu vacío"
+    },
+    {
+      "screen": {
+        "id": "notes\n",
+        "title": "Notas",
+        "path": "/app/notes"
+      },
+      "erp": false,
+      "manifest": false,
+      "note": "id con salto de línea final"
+    },
+    {
+      "screen": {
+        "id": "notes",
+        "title": "Notas",
+        "path": "/app/notes\n"
+      },
+      "erp": false,
+      "manifest": false,
+      "note": "ruta con salto de línea final"
+    }
+  ]
+}

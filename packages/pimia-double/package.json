@@ -1,0 +1,11 @@
+{
+  "name": "@dvi-base/pimia-double",
+  "version": "0.1.0",
+  "description": "Doble de Pimia ERP como emisor de tokens de módulo, para pruebas y desarrollo. Nunca en producción.",
+  "license": "SEE LICENSE IN LICENSE",
+  "type": "module",
+  "exports": {
+    ".": "./src/double.ts",
+    "./contract-target": "./src/contract-target.ts"
+  }
+}

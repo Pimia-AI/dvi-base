@@ -1,0 +1,61 @@
+# Fecha: 2026-11-08T12:28:25Z  Rama base-minima sobre 0cbbe63 (cambios sin commit)
+# Node v26.8.1 (la imagen fijará 24.22.0), @pimia/sdk 0.36.0
+
+$ npm run typecheck
+(sin errores, código 0)
+
+$ npm test
+
+
+✔ sin token, con token caducado, sin empresa o con empresa ajena, el módulo no abre (176.350334ms)
+✔ nueva: con un token bueno y su empresa, el handler recibe la sesión que dice Pimia (5.29625ms)
+✔ el bundle arranca solo con PIMIA_BASE_URL y la base; fuera de su tabla, 404 vacío con las cabeceras del módulo (208.281125ms)
+✔ sin lo suyo, o con un marcador mal escrito, el módulo no arranca y no dice ningún valor (452.447541ms)
+✔ sin HOSTNAME en el entorno, el módulo escucha en 127.0.0.1 (124.140625ms)
+✔ PIMIA_BASE_URL con {tenant}: un patrón del que se construye la dirección de cada instancia (0.96075ms)
+✔ ningún origen lleva llaves: ni escritas, ni codificadas, ni de ancho completo (2.687625ms)
+✔ el módulo lee solo lo suyo: PIMIA_BASE_URL y, con dirección fija, PIMIA_TENANT_ID (0.345667ms)
+✔ DATABASE_URL: PostgreSQL con nombre de base; si no, no hay configuración y no se dice el valor (0.170125ms)
+✔ sin modo que mirar: withModule pasa siempre por la sesión (el 404 de lo que no existe lo da la tabla) (21.159291ms)
+✔ los fallos de sesión salen como JSON con su código y sin interioridades (1.514833ms)
+✔ el handler recibe la sesión y sus errores se traducen (2.439917ms)
+✔ readJson exige un objeto JSON de tamaño acotado (3.993083ms)
+✔ isUuid solo admite UUID (de la línea 61 de vet) (0.156334ms)
+✔ un modulo.json válido se lee tal cual (1.630583ms)
+✔ lo que no cuadra no se completa: error con el campo (0.595458ms)
+✔ la tabla cerrada: cada ruta con sus métodos; con otro método, 405 con Allow (2.84275ms)
+✔ la query llega intacta al handler; la ruta es lo que va antes del primer ? (0.289875ms)
+✔ los segmentos variables se decodifican para el handler, que valida el id (0.254792ms)
+✔ todo lo demás es 404, sin normalizar nada: ni páginas, ni lo que un framework desenvuelve, ni parecidos (4.119875ms)
+✔ las cabeceras del módulo: sin documentos, sin caché y sin HSTS (0.204792ms)
+✔ nueva: una tabla de dominio mal formada no se acepta (0.774333ms)
+✔ un handler por cada ruta y método de la tabla: si falta o sobra uno, el servidor no se crea (3.453458ms)
+✔ vida 200; fuera de la tabla 404 y con otro método 405, sin cuerpo y con las cabeceras del módulo (59.165625ms)
+✔ lo que Node contestaría o cortaría por su cuenta sale con las cabeceras del módulo: sin Host, Expect y CONNECT (8.228125ms)
+✔ sin token, 401 en JSON sin salir a la red; al handler solo le llegan las cabeceras del módulo y la query (4.602708ms)
+✔ más de 64 KiB por trozos, sin content-length: 413 en JSON y la conexión se cierra; justo en el tope pasa (2.022375ms)
+✔ lo inesperado sale como 503 en JSON, sin detalles y con las cabeceras del módulo (0.649458ms)
+✔ readBearer solo admite la forma Bearer (0.454791ms)
+✔ la sesión del módulo nace de /me, con la empresa confirmada (10.115833ms)
+✔ el plan de la instancia tiene que llevar el módulo; se recuerda un rato por instancia (1.551125ms)
+✔ con patrón, la instancia la dice la cabecera y la dirección se construye, nunca se acepta (0.625667ms)
+✔ la sesión usa lo que da readModuleConfig: patrón de la vertical o dirección fija con su slug (0.504792ms)
+✔ sin token, con token caducado o sin empresa, el módulo no abre (0.259709ms)
+✔ una empresa ajena o una instancia distinta se rechazan aunque el token valga (0.137083ms)
+✔ si Pimia no contesta, el módulo dice 503 y no inventa una sesión (0.309917ms)
+✔ nada del backend retirado fuera de AGENTS.md, encargo, inventario y plan (10.953625ms)
+ℹ tests 37
+ℹ suites 0
+ℹ pass 37
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1034.111125
+código de salida: 0
+
+$ npm run test:bd
+✔ PostgreSQL 17, escuchando solo en 127.0.0.1 (14.827709ms)
+✔ el propietario crea en su base; el de ejecución no crea ni lee sin concesión (15.352084ms)
+ℹ pass 2
+ℹ fail 0

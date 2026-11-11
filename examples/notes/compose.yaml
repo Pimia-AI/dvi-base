@@ -1,0 +1,103 @@
+# El arranque local del módulo de ejemplo: `npm run up` (lo lanza `dvi-module up`, que genera `.dvi/local.env`).
+# Todo publicado solo en 127.0.0.1. PostgreSQL en memoria: cada `up` empieza de cero, migrado y con datos de ejemplo.
+# Pimia ERP es el doble (`pimia-double`), que emite tokens de módulo como el ERP.
+name: dvi-base-notes
+
+x-build: &build
+  context: ../..
+  dockerfile: examples/notes/Dockerfile
+
+x-database: &database
+  DATABASE_URL: postgresql://notes_runtime:${DVI_RUNTIME_PASSWORD:?falta .dvi/local.env}@postgres:5432/notes
+  DATABASE_OWNER_URL: postgresql://notes_owner:${DVI_OWNER_PASSWORD:?falta .dvi/local.env}@postgres:5432/notes
+
+services:
+  postgres:
+    image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    environment:
+      POSTGRES_USER: dvi_admin
+      POSTGRES_PASSWORD: ${DVI_POSTGRES_PASSWORD:?falta .dvi/local.env}
+      POSTGRES_DB: postgres
+      MODULE_DB: notes
+      MODULE_OWNER_PASSWORD: ${DVI_OWNER_PASSWORD}
+      MODULE_RUNTIME_PASSWORD: ${DVI_RUNTIME_PASSWORD}
+    volumes:
+      - ../../packages/module/assets/postgres-init.sh:/docker-entrypoint-initdb.d/10-module.sh:ro
+    tmpfs:
+      - /var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:7163:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dvi_admin -d notes"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  migrate:
+    build: { <<: *build, target: module-dev }
+    image: dvi-base-notes/module-dev
+    command: ["sh", "-c", "node server.cjs migrate && node server.cjs seed"]
+    environment:
+      <<: *database
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: "no"
+
+  pimia-double:
+    build: { <<: *build, target: dev-tools }
+    image: dvi-base-notes/dev-tools
+    command: ["node", "pimia-double.cjs"]
+    environment:
+      MODULE_OWNER: dvi-base
+      MODULE_KEY: dvi-base-notes
+      PIMIA_BASE_URL: https://pimia.test.invalid
+      PIMIA_TENANT_ID: demo
+      PORT: "7162"
+    ports:
+      - "127.0.0.1:7162:7162"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:7162/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  module:
+    build: { <<: *build, target: module-dev }
+    image: dvi-base-notes/module-dev
+    environment:
+      <<: *database
+      PIMIA_BASE_URL: https://pimia.test.invalid
+      PIMIA_TENANT_ID: demo
+      PIMIA_DOUBLE_URL: http://pimia-double:7162
+      PIMIA_HOST_ORIGINS: http://127.0.0.1:7161
+    ports:
+      - "127.0.0.1:7160:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/readyz').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      pimia-double: { condition: service_healthy }
+
+  dev-host:
+    build: { <<: *build, target: dev-tools }
+    image: dvi-base-notes/dev-tools
+    command: ["node", "dev-host.cjs"]
+    environment:
+      MODULE_ORIGIN: http://127.0.0.1:7160
+      MODULE_MANIFEST: /app/module.json
+      PIMIA_DOUBLE_URL: http://pimia-double:7162
+      TENANT: demo
+      UI_DIR: /app/dev-host-ui
+      PORT: "7161"
+    ports:
+      - "127.0.0.1:7161:7161"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:7161/dev/config').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    depends_on:
+      module: { condition: service_healthy }

@@ -1,0 +1,21 @@
+{
+  "name": "@dvi-base/dev-host",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Anfitrión de desarrollo: hace en local el papel del panel de Pimia ERP (contrato embebido). Nunca en producción.",
+  "license": "SEE LICENSE IN LICENSE",
+  "type": "module",
+  "exports": {
+    ".": "./src/server.ts",
+    "./people": "./src/people.ts"
+  },
+  "scripts": {
+    "build": "vite build --config src/ui/vite.config.ts"
+  },
+  "dependencies": {
+    "@dvi-base/kit": "0.1.0",
+    "lucide-react": "1.61.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  }
+}

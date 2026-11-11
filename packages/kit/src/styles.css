@@ -1,0 +1,127 @@
+/*
+ * Kit de interfaz de los módulos de Pimia ERP: el mundo visual de taskai.work (papel neutro, tinta negra, líneas
+ * finas; la acción primaria es negra y el color va solo en los datos).
+ *
+ * Uso en un módulo: `@import "@dvi-base/kit/styles.css";` en el CSS de sus pantallas (con Tailwind 4). Estos son los
+ * ÚNICOS literales de color: los componentes usan solo clases semánticas (bg-background, text-muted-foreground,
+ * border-border…). Una prueba del kit lo comprueba.
+ */
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/geist-mono";
+
+/* Tailwind tiene que ver las clases de los componentes del kit, estén donde estén instalados. */
+@source "./";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-paper: var(--paper);
+  --color-brand: var(--brand);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --text-2xs: 0.6875rem;
+}
+
+:root {
+  --background: #fff;
+  --foreground: #0a0a0a;
+  --card: #fff;
+  --card-foreground: #0a0a0a;
+  --primary: #171717;
+  --primary-foreground: #fafafa;
+  --primary-hover: #2b2b2b;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #171717;
+  --muted: #f5f5f5;
+  --muted-foreground: #737373;
+  --accent: #f5f5f5;
+  --accent-foreground: #171717;
+  --destructive: #e40014;
+  --success: #00884b;
+  --warning: #8a6100;
+  --info: #2a78d6;
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: #a1a1a1;
+  --chart-1: #008573;
+  --chart-2: #2a78d6;
+  --chart-3: #eb6834;
+  /* El papel cálido del sello «Verificado» de taskai.work. */
+  --paper: #e8e6e1;
+  /* La marca: el cuadrado teal con la inicial, el único teal fuera de los datos. */
+  --brand: #0f766e;
+  --radius: 0.5rem;
+  color-scheme: light;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --card: #171717;
+  --card-foreground: #fafafa;
+  --primary: #e5e5e5;
+  --primary-foreground: #171717;
+  --primary-hover: #fafafa;
+  --secondary: #262626;
+  --secondary-foreground: #fafafa;
+  --muted: #262626;
+  --muted-foreground: #a1a1a1;
+  --accent: #262626;
+  --accent-foreground: #fafafa;
+  --destructive: #ff6568;
+  --success: #2ec18c;
+  --warning: #e9b928;
+  --info: #5aa0ff;
+  --border: #ffffff1a;
+  --input: #ffffff26;
+  --ring: #737373;
+  --chart-1: #2ec18c;
+  --chart-2: #5aa0ff;
+  --chart-3: #ff8c5a;
+  --paper: #262320;
+  --brand: #2dd4bf;
+  color-scheme: dark;
+}
+
+@layer base {
+  * { @apply border-border; }
+  html { @apply font-sans antialiased; text-rendering: optimizeLegibility; }
+  body { @apply bg-background text-foreground text-sm; }
+  :focus-visible { @apply outline-2 outline-offset-2 outline-foreground; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  }
+}
+
+/* Superficies del navegador: selección, caret, scrollbar, subrayado y cifras de las tablas. */
+::selection { background: var(--foreground); color: var(--background); }
+html { scrollbar-width: thin; scrollbar-color: var(--border) transparent; caret-color: var(--foreground); }
+a { text-underline-offset: 3px; }

@@ -1,0 +1,13 @@
+# Lista de lo que entra en el contexto de construcción (como en vet: todo fuera salvo lo que se nombra).
+*
+!package.json
+!package-lock.json
+!tsconfig.json
+!packages/
+!examples/
+**/node_modules
+**/dist
+**/.dvi
+**/tests
+**/tests-db
+**/showcase

@@ -1,0 +1,11 @@
+/** Lo que una pantalla de módulo importa del kit. Los estilos van aparte: `@dvi-base/kit/styles.css`. */
+export { cn } from './cn'
+export { Button, ButtonLink, buttonClasses, type ButtonProps, type ButtonVariant, type ButtonSize } from './components/button'
+export { Screen, PageHeader, Section, DetailList, type PageHeaderProps } from './components/layout'
+export { StatusBadge, Notice, type Tone } from './components/status'
+export { CountTabs, SearchInput, TableToolbar, DataTable, type Column, type CountTab, type DataTableProps } from './components/table'
+export { Field, TextInput, TextArea, Select, Checkbox, ChoiceGroup, type ChoiceOption, type FieldProps } from './components/form'
+export { EmptyState, LoadingState, ModuleErrorState, type ErrorLike } from './components/states'
+export { connectHost, readHostContext, originAllowed, HostError, PROTOCOL, type HostSession, type HostContext, type HostConnection, type HostOptions, type WindowLike } from './host'
+export { createModuleApi, ModuleApiError, type ModuleApi, type SessionSource } from './api'
+export { ModuleApp, useModule, useTitle, type ModuleContextValue } from './react'

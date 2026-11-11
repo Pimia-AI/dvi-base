@@ -1,0 +1,10 @@
+# 2026-11-08T14:22:05Z  npm run up (desde la raíz; primera vez, construyendo imágenes)
+{"step":"config","status":"ok","module":"dvi-base-notes","mode":"double"}
+{"step":"secrets","status":"ok","created":true,"file":".dvi/local.env"}
+{"step":"compose","status":"ok","ms":27897,"services":["postgres","migrate","pimia-double","module","dev-host"]}
+{"step":"migrations","status":"ok","schema":"notes","applied":["0001_notes"],"already_applied":0}
+{"step":"seed","status":"ok","files":1,"rows":5}
+{"step":"module","status":"ok","ready":true,"migrations":1}
+{"step":"host","status":"ok"}
+{"result":"ok","urls":{"host":"http://127.0.0.1:7161/m/dvi-base-notes/notes","module":"http://127.0.0.1:7160/app/notes","version":"http://127.0.0.1:7160/api/version"}}
+# código de salida: 0

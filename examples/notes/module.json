@@ -1,0 +1,13 @@
+{
+  "owner": "dvi-base",
+  "key": "dvi-base-notes",
+  "name": "Notas",
+  "schema": "notes",
+  "scopes": ["notes:read", "notes:write"],
+  "ui": {
+    "screens": [
+      { "id": "notes", "title": "Notas", "path": "/app/notes", "menu": { "group": "Ejemplo", "icon": "notebook-pen", "order": 10 } }
+    ]
+  },
+  "needs_from_pimia": []
+}

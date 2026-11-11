@@ -1,0 +1,58 @@
+**Licencia del Ecosistema Pimia, versión 1.0**
+
+Copyright © 2026 Pablo Galeote Corrales. Todos los derechos reservados salvo los que esta licencia concede expresamente.
+
+### 1. Definiciones
+
+- **El Software:** el código, la documentación y los demás materiales de este repositorio.
+- **El Ecosistema Pimia:** los productos y servicios que ofrece o autoriza Pablo Galeote Corrales bajo la marca Pimia, entre ellos Pimia ERP y el entorno de desarrollo de verticales.
+- **Vertical:** un módulo o aplicación que usa Pimia ERP.
+- **Usted:** la persona o entidad que usa el Software.
+
+### 2. Lo que se permite
+
+Pablo Galeote Corrales le concede una licencia mundial, gratuita, no exclusiva e intransferible para:
+
+a) leer, clonar y ejecutar el Software;
+
+b) modificar el Software y crear obras basadas en él, **con el único fin de crear, probar, desplegar y operar Verticales** para el Ecosistema Pimia, tanto para uso propio como para sus clientes;
+
+c) distribuir el Software, modificado o no, como parte de una Vertical, siempre que conserve esta licencia y los avisos de copyright en las partes que procedan del Software.
+
+### 3. Lo que no se permite
+
+Sin permiso previo y por escrito de Pablo Galeote Corrales, no puede:
+
+a) usar el Software, en todo o en parte, para crear, ofrecer u operar productos o servicios que no usen Pimia ERP;
+
+b) usar el Software para crear u ofrecer un producto o servicio que sustituya a un producto del Ecosistema Pimia o compita con él;
+
+c) vender, alquilar, sublicenciar o redistribuir el Software por separado, fuera de una Vertical;
+
+d) retirar o alterar esta licencia o los avisos de copyright.
+
+### 4. Su trabajo es suyo
+
+El código que usted escriba para su Vertical y que no proceda del Software es suyo y puede licenciarlo como quiera. Esta licencia solo se aplica a las partes que procedan del Software, modificadas o no.
+
+### 5. Aportaciones
+
+Si envía una modificación a este repositorio, concede a Pablo Galeote Corrales una licencia perpetua, mundial, gratuita e irrevocable para usarla, modificarla y distribuirla como parte del Software, bajo esta licencia o bajo otras.
+
+### 6. Marcas
+
+Esta licencia no concede ningún derecho sobre las marcas, nombres comerciales o logotipos de Pablo Galeote Corrales, salvo el uso razonable para describir el origen del Software.
+
+### 7. Sin garantía
+
+El Software se ofrece «tal cual», sin garantía de ningún tipo, expresa o implícita. En la medida en que la ley lo permita, Pablo Galeote Corrales no responde de los daños que se deriven de su uso.
+
+### 8. Terminación
+
+Esta licencia termina automáticamente si usted incumple sus condiciones. Al terminar, debe dejar de usar y de distribuir el Software. Las Verticales ya entregadas a sus clientes antes del incumplimiento pueden seguir en uso mientras se corrige, durante un plazo de 30 días desde el aviso.
+
+### 9. Ley aplicable
+
+Esta licencia se rige por la ley española. Para cualquier controversia serán competentes los juzgados y tribunales que correspondan conforme a ella.
+
+Para permisos distintos de los de esta licencia: fde@boksia.com.

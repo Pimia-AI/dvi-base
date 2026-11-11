@@ -1,0 +1,25 @@
+{
+  "name": "@dvi-base/module",
+  "version": "0.1.0",
+  "description": "Runtime de un módulo de Pimia ERP: servidor, sesión, persistencia y migraciones",
+  "license": "SEE LICENSE IN LICENSE",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./build": "./src/build.ts",
+    "./testing/postgres": "./src/testing/postgres.ts",
+    "./testing/contract": "./src/testing/contract.ts"
+  },
+  "dependencies": {
+    "@pimia/sdk": "0.36.0",
+    "esbuild": "0.25.12",
+    "pg": "8.16.3"
+  },
+  "devDependencies": {
+    "@types/pg": "8.15.5"
+  },
+  "bin": {
+    "dvi-module": "./bin/dvi-module.mjs",
+    "dvi-new-module": "./bin/new-module.mjs"
+  }
+}

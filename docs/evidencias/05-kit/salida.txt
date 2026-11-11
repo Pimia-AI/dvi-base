@@ -1,0 +1,62 @@
+# Fecha: 2026-11-08T13:12:25Z  Rama base-minima sobre 7fbfd8d (paso 5 sin commit)
+
+$ npm run typecheck
+(sin errores, código 0)
+
+$ node --test packages/kit/tests (pruebas del kit)
+✔ cada petición lleva el token, la empresa y la instancia, sin cookies; el cuerpo, en JSON (11.500959ms)
+✔ un 401 pide sesión nueva una vez y repite una vez; si vuelve a fallar, error y aviso al anfitrión (0.588875ms)
+✔ los errores del módulo salen con su código y sus errores por campo; los que bloquean se avisan (0.599041ms)
+✔ el botón primario es la acción negra; ocupado, deshabilitado y con aria-busy (3.922708ms)
+✔ la cabecera: un h1, la descripción y las acciones (0.693ms)
+✔ un campo une etiqueta, ayuda y error con su control (0.690459ms)
+✔ opciones, pestañas y estado: radios con nombre, tablist con aria-selected y estado con texto (0.526917ms)
+✔ la tabla: cabeceras con scope, filas, y el vacío cuando no hay filas (0.71025ms)
+✔ cada error del módulo dice qué pasa y qué hacer, con su código a la vista (1.115958ms)
+✔ ningún color literal en los componentes: solo tokens semánticos (los literales viven en styles.css) (2.201ms)
+✔ orígenes del anfitrión: exactos o con el patrón {tenant}, y nada más (0.492208ms)
+✔ el contexto de la URL: protocolo 1, anfitrión permitido, instancia y empresa válidas (0.761458ms)
+✔ abierta suelta (sin padre), no se conecta: standalone (0.182791ms)
+✔ al conectar dice «ready» al anfitrión, solo a su origen, y la sesión que llega es la de su instancia y empresa (0.99775ms)
+✔ una sesión de otra empresa u otra instancia, o sin token, se rechaza (0.36625ms)
+✔ a punto de caducar o tras un 401 se pide otra; dos peticiones a la vez comparten respuesta (0.171709ms)
+✔ si el anfitrión no contesta, se rinde a tiempo; cerrada, no espera (21.68325ms)
+✔ lo que el módulo cuenta al anfitrión y lo que el anfitrión le cuenta al módulo (0.394792ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 321.761708
+
+$ npm test (todo el repo)
+ℹ tests 60
+ℹ pass 60
+ℹ fail 0
+
+$ npm run showcase:build -w @dvi-base/kit
+showcase/dist/assets/index-Dh3gjbTq.css                                   26.98 kB │ gzip:  6.35 kB
+showcase/dist/assets/index-C9jrNz-A.js                                   252.91 kB │ gzip: 79.25 kB
+
+✓ built in 242ms
+
+$ npm pack -w @dvi-base/kit --dry-run (el kit se puede publicar como paquete)
+npm notice 3.3kB src/api.ts
+npm notice 239B src/cn.ts
+npm notice 2.5kB src/components/button.tsx
+npm notice 4.3kB src/components/form.tsx
+npm notice 3.3kB src/components/layout.tsx
+npm notice 4.8kB src/components/states.tsx
+npm notice 2.3kB src/components/status.tsx
+npm notice 4.7kB src/components/table.tsx
+npm notice 10.5kB src/host.ts
+npm notice 1.1kB src/index.ts
+npm notice 4.4kB src/styles.css
+npm notice name: @dvi-base/kit
+npm notice version: 0.1.0
+npm notice filename: dvi-base-kit-0.1.0.tgz
+npm notice package size: 13.7 kB
+npm notice unpacked size: 42.4 kB
+npm notice total files: 12

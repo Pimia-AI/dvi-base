@@ -1,0 +1,26 @@
+{
+  "name": "@dvi-base/example-notes",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Módulo de ejemplo de dvi-base: notas de la empresa. Dominio neutro para probar y enseñar la base.",
+  "license": "SEE LICENSE IN LICENSE",
+  "type": "module",
+  "scripts": {
+    "build:ui": "vite build --config src/ui/vite.config.ts",
+    "up": "node ../../packages/module/bin/dvi-module.mjs up",
+    "down": "node ../../packages/module/bin/dvi-module.mjs down",
+    "doctor": "node ../../packages/module/bin/dvi-module.mjs doctor",
+    "image": "node ../../packages/module/bin/dvi-module.mjs image"
+  },
+  "dependencies": {
+    "@dvi-base/kit": "0.1.0",
+    "@dvi-base/module": "0.1.0",
+    "lucide-react": "1.61.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@dvi-base/dev-host": "0.1.0",
+    "@dvi-base/pimia-double": "0.1.0"
+  }
+}

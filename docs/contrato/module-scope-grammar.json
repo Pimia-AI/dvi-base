@@ -1,0 +1,117 @@
+{
+  "description": "Gramática común de los ámbitos de un módulo propio (docs/modulos/sesion-de-modulo.md §4.1). La misma expresión que SCOPE en dvi-base/packages/module/src/manifest.ts:26, más el tope de tamaño del ERP. Cada caso dice qué espera el ERP (IntegradorModuloRequest) y qué espera readManifest de dvi-base; las dos pruebas leen este fichero.",
+  "pattern": "^[a-z][a-z0-9-]{0,40}(:[a-z][a-z0-9-]{0,40}){1,3}$",
+  "max_length": 48,
+  "max_count": 16,
+  "cases": [
+    {
+      "value": "notes:write",
+      "erp": true,
+      "manifest": true
+    },
+    {
+      "value": "notes:read",
+      "erp": true,
+      "manifest": true
+    },
+    {
+      "value": "notes:items:read",
+      "erp": true,
+      "manifest": true
+    },
+    {
+      "value": "a:b:c:d",
+      "erp": true,
+      "manifest": true
+    },
+    {
+      "value": "notes-v2:write",
+      "erp": true,
+      "manifest": true
+    },
+    {
+      "value": "n0tes:wr1te",
+      "erp": true,
+      "manifest": true
+    },
+    {
+      "value": "aaaaaaaaaaaaaaaaaaaaaaa:bbbbbbbbbbbbbbbbbbbbbbbb",
+      "erp": true,
+      "manifest": true,
+      "note": "48 caracteres, el máximo"
+    },
+    {
+      "value": "aaaaaaaaaaaaaaaaaaaaaaaa:bbbbbbbbbbbbbbbbbbbbbbbb",
+      "erp": false,
+      "manifest": true,
+      "note": "49 caracteres: el tope del ERP; readManifest aún no lo tiene (propuesto a dvi-base)"
+    },
+    {
+      "value": "1:a",
+      "erp": false,
+      "manifest": false,
+      "note": "el segmento empieza por cifra"
+    },
+    {
+      "value": "notes:1read",
+      "erp": false,
+      "manifest": false
+    },
+    {
+      "value": "a",
+      "erp": false,
+      "manifest": false,
+      "note": "un solo segmento"
+    },
+    {
+      "value": "a:b:c:d:e",
+      "erp": false,
+      "manifest": false,
+      "note": "cinco segmentos"
+    },
+    {
+      "value": "Notes:read",
+      "erp": false,
+      "manifest": false,
+      "note": "mayúsculas"
+    },
+    {
+      "value": "notes_read:write",
+      "erp": false,
+      "manifest": false,
+      "note": "guion bajo"
+    },
+    {
+      "value": "notes:",
+      "erp": false,
+      "manifest": false
+    },
+    {
+      "value": ":read",
+      "erp": false,
+      "manifest": false
+    },
+    {
+      "value": "notes::read",
+      "erp": false,
+      "manifest": false
+    },
+    {
+      "value": "notes read",
+      "erp": false,
+      "manifest": false,
+      "note": "espacio: rompería el claim scope"
+    },
+    {
+      "value": "-notes:read",
+      "erp": false,
+      "manifest": false
+    },
+    {
+      "value": "notes:write\n",
+      "erp": false,
+      "manifest": false,
+      "note": "salto de línea final: en PCRE `$` lo admitiría; por eso el ERP usa \\z"
+    }
+  ]
+}

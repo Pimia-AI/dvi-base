@@ -1,0 +1,35 @@
+# Fecha: 2026-11-08T11:20:26Z  Commit base: 0f81575 (cambios sin commit)
+# Node v26.8.1, npm 11.19.0, Docker 29.2.1
+$ npm run typecheck
+(sin errores, código 0)
+
+$ npm run test:bd
+✔ PostgreSQL 17, escuchando solo en 127.0.0.1 (13.844084ms)
+✔ el propietario crea en su base; el de ejecución no crea ni lee sin concesión (14.555042ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 150.45225
+código de salida: 0
+
+$ docker ps -a --filter label=dvi-base=pruebas  (contenedores que quedan)
+       0
+
+$ npm test  (criterio 7, pendiente de decisión)
+✖ nada del backend retirado fuera de encargo, inventario y plan (14.0175ms)
+ℹ pass 0
+ℹ fail 1
+✖ failing tests:
+✖ nada del backend retirado fuera de encargo, inventario y plan (14.0175ms)
+    actual: [ 'AGENTS.md', 'README.md' ],
+
+# 2026-11-08T12:19:59Z tras traer main (0cbbe63, criterio 7 corregido en el encargo §7.4)
+$ npm test
+✔ nada del backend retirado fuera de AGENTS.md, encargo, inventario y plan (12.229541ms)
+ℹ tests 1
+ℹ pass 1
+ℹ fail 0

@@ -1,0 +1,86 @@
+# Fecha: 2026-11-08T12:51:25Z  Rama base-minima sobre 17af0a3 (paso 4 y renombrado al inglés sin commit)
+# Node v26.8.1 (la imagen fijará 24.22.0), PostgreSQL 17.11 efímero en Docker
+
+$ npm run typecheck
+(sin errores, código 0)
+
+$ npm test
+
+
+✔ sin token, con token caducado, sin empresa o con empresa ajena, el módulo no abre (228.339834ms)
+✔ nueva: con un token bueno y su empresa, el handler recibe la sesión que dice Pimia (5.631958ms)
+✔ PIMIA_BASE_URL con {tenant}: un patrón del que se construye la dirección de cada instancia (1.118625ms)
+✔ ningún origen lleva llaves: ni escritas, ni codificadas, ni de ancho completo (2.674833ms)
+✔ el módulo lee solo lo suyo: PIMIA_BASE_URL y, con dirección fija, PIMIA_TENANT_ID (0.360083ms)
+✔ DATABASE_URL: PostgreSQL con nombre de base; si no, no hay configuración y no se dice el valor (0.177959ms)
+✔ sin modo que mirar: withModule pasa siempre por la sesión (el 404 de lo que no existe lo da la tabla) (35.888041ms)
+✔ los fallos de sesión salen como JSON con su código y sin interioridades (0.878125ms)
+✔ el handler recibe la sesión y sus errores se traducen (0.683917ms)
+✔ readJson exige un objeto JSON de tamaño acotado (1.314125ms)
+✔ isUuid solo admite UUID (de la línea 61 de vet) (0.152959ms)
+✔ un module.json válido se lee tal cual (0.862708ms)
+✔ lo que no cuadra no se completa: error con el campo (0.321541ms)
+✔ una carpeta válida: en orden, con su checksum SHA-256 de los bytes; vacía también vale (3.151583ms)
+✔ lo que no cuadra para la lectura: nombre, hueco, repetida, sin carpeta o con su propia transacción (3.373834ms)
+✔ el historial tiene que ser un prefijo exacto de la carpeta (0.433625ms)
+✔ la tabla cerrada: cada ruta con sus métodos; con otro método, 405 con Allow (2.303ms)
+✔ la query llega intacta al handler; la ruta es lo que va antes del primer ? (0.153458ms)
+✔ los segmentos variables se decodifican para el handler, que valida el id (0.093208ms)
+✔ todo lo demás es 404, sin normalizar nada: ni páginas, ni lo que un framework desenvuelve, ni parecidos (1.527792ms)
+✔ las cabeceras del módulo: sin documentos, sin caché y sin HSTS (0.089708ms)
+✔ nueva: una tabla de dominio mal formada no se acepta (0.445084ms)
+✔ un handler por cada ruta y método de la tabla: si falta o sobra uno, el servidor no se crea (8.253666ms)
+✔ vida 200; fuera de la tabla 404 y con otro método 405, sin cuerpo y con las cabeceras del módulo (49.512125ms)
+✔ lo que Node contestaría o cortaría por su cuenta sale con las cabeceras del módulo: sin Host, Expect y CONNECT (8.685084ms)
+✔ sin token, 401 en JSON sin salir a la red; al handler solo le llegan las cabeceras del módulo y la query (5.660917ms)
+✔ más de 64 KiB por trozos, sin content-length: 413 en JSON y la conexión se cierra; justo en el tope pasa (4.064416ms)
+✔ lo inesperado sale como 503 en JSON, sin detalles y con las cabeceras del módulo (0.882834ms)
+✔ si la base acepta la conexión y deja de contestar, la consulta se corta: 503 y las plazas vuelven al pool (6035.266792ms)
+✔ /readyz: 200 si el historial coincide con las migraciones del módulo; 503 con Retry-After si no, o si la base falla (17.946375ms)
+✔ readBearer solo admite la forma Bearer (0.913291ms)
+✔ la sesión del módulo nace de /me, con la empresa confirmada (11.606333ms)
+✔ el plan de la instancia tiene que llevar el módulo; se recuerda un rato por instancia (2.794875ms)
+✔ con patrón, la instancia la dice la cabecera y la dirección se construye, nunca se acepta (2.269791ms)
+✔ la sesión usa lo que da readModuleConfig: patrón de la vertical o dirección fija con su slug (0.595333ms)
+✔ sin token, con token caducado o sin empresa, el módulo no abre (0.284875ms)
+✔ una empresa ajena o una instancia distinta se rechazan aunque el token valga (0.137458ms)
+✔ si Pimia no contesta, el módulo dice 503 y no inventa una sesión (0.320084ms)
+✔ el bundle arranca solo con PIMIA_BASE_URL y la base; fuera de su tabla, 404 vacío con las cabeceras del módulo (178.405708ms)
+✔ sin lo suyo, o con un marcador mal escrito, el módulo no arranca y no dice ningún valor (552.454417ms)
+✔ sin HOSTNAME en el entorno, el módulo escucha en 127.0.0.1 (117.311667ms)
+✔ nada del backend retirado fuera de AGENTS.md, encargo, inventario y plan (17.355ms)
+ℹ tests 42
+ℹ suites 0
+ℹ pass 42
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6473.184792
+código de salida: 0
+
+$ npm run test:db
+✔ migrar con el bundle: una línea JSON, idempotente, y nunca dice la dirección de la base (316.0835ms)
+✔ alta, lista, ficha y edición con versión, acotadas a la empresa (107.38925ms)
+✔ vivo, listo y versión: /readyz comprueba el historial con el rol de ejecución; /api/version dice qué corre (26.212458ms)
+✔ fuera de su API no existe nada: la portada y lo que un framework desenvolvía responden 404 sin cuerpo (18.584375ms)
+✔ aplica en orden, una vez, con historial y checksum; /readyz y /api/version lo leen con el rol de ejecución (87.889708ms)
+✔ una migración ya aplicada que cambia, o que desaparece de la carpeta, para el migrador y /readyz dice que no (59.428208ms)
+✔ si una migración falla, se deshace entera, las anteriores quedan y las siguientes no se aplican (34.316916ms)
+✔ dos procesos que migran a la vez no aplican nada dos veces (349.287167ms)
+✔ el rol de ejecución lee, inserta y actualiza; no borra, no cambia el esquema ni toca el historial (29.654792ms)
+✔ notas en el esquema del módulo: ámbito por instancia y empresa, alta repetible, versión y permisos del rol de ejecución (62.310625ms)
+✔ PostgreSQL 17, escuchando solo en 127.0.0.1 (14.275959ms)
+✔ el propietario crea en su base; el de ejecución no crea ni lee sin concesión (20.74725ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1708.580208
+código de salida: 0
+
+$ docker ps -a --filter label=dvi-base=tests  (contenedores que quedan)
+       0

@@ -1,0 +1,49 @@
+# Salida de las pruebas sobre 3859f1b (08/11/2026)
+
+$ node --import tsx --test packages/module/tests/shared-grammar.test.ts packages/module/tests/token-cross.test.ts packages/module/tests/new-module.test.ts packages/module/tests/manifest.test.ts packages/module/tests/session.test.ts
+✔ un module.json válido se lee tal cual
+✔ lo que no cuadra no se completa: error con el campo
+✔ crea el módulo con todo sustituido: clave, nombre, esquema, carpeta y paquete
+✔ no pisa un módulo que ya existe, y los nombres malos no pasan
+✔ el nombre visible cabe en el grupo del menú (40 caracteres, la gramática común con el ERP)
+✔ fuera de la raíz de dvi-base no hace nada
+✔ readBearer solo admite la forma Bearer
+✔ la sesión sale del token de módulo firmado; el token no se reenvía a /me ni a ninguna API de la persona
+✔ sin token, mal formado, sin firma o firmado por otra clave: 401 unauthorized
+✔ audiencia: solo owner/key de este módulo, y una sola
+✔ caducado: 401 token_expired (con 30 s de holgura de reloj)
+✔ empresa: la cabecera tiene que ser la del token; cambiar de empresa es pedir otro token
+✔ instancia ajena: un token de otra instancia es tenant_mismatch y no se le pregunta a la nuestra
+✔ plan y revocación: módulo retirado → not_in_plan; sesión revocada → token_revoked
+✔ el estado se recuerda por instancia + módulo, como mucho un minuto, y nunca se comparte entre módulos
+✔ claves: se recuerdan por instancia; una kid nueva (rotación) las vuelve a pedir
+✔ ERP caído: 503 pimia_unavailable y ninguna sesión inventada; con claves y estado recientes, sigue
+✔ con patrón, la instancia la dice la cabecera y la dirección del emisor se construye, nunca se acepta
+✔ la sesión usa lo que da readModuleConfig: patrón de la vertical o dirección fija con su slug
+✔ ámbitos: los casos compartidos con el ERP, uno a uno, dan lo mismo que el ERP
+✔ ámbitos: el patrón y los topes del fichero son los de manifest.ts
+✔ pantallas: los casos compartidos con el ERP, uno a uno, dan lo mismo que el ERP
+✔ pantallas: los topes del fichero, justo en el límite y uno más
+✔ pantallas: los patrones del fichero son los de readUi, y solo admite sus campos (como el ERP)
+✔ el vector del ERP vale aquí tal cual, y forge reproduce sus bytes
+✔ un salto de línea final no pasa en ningún claim (los nueve del ERP)
+✔ ni otros caracteres de control en los textos, ni en el nombre
+✔ ninguna clave JSON repetida en la cabecera ni en los claims (los cinco del ERP)
+✔ el detector de duplicados no confunde claves con valores ni con comillas escapadas
+✔ cada ámbito del claim scope con la gramática común; vacío es ninguno
+ℹ tests 30
+ℹ pass 30
+ℹ fail 0
+
+$ npm test
+ℹ tests 109
+ℹ pass 109
+ℹ fail 0
+
+$ npm run test:db
+ℹ tests 17
+ℹ pass 17
+ℹ fail 0
+
+$ npm run typecheck
+(sin errores; salida vacía)

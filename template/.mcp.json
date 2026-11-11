@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "dvi": {
+      "type": "http",
+      "url": "https://dvi-api.taskai.work/v1/mcp",
+      "headers": {
+        "Authorization": "Bearer ${DVI_TOKEN}"
+      }
+    }
+  }
+}

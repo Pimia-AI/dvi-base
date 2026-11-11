@@ -1,0 +1,92 @@
+# La imagen de producción del módulo «__NAME__», una vez por commit (docs/api.md §22.4 del DVI).
+# Activo cuando este módulo es la raíz de su propio repositorio de vertical.
+# Construye el target `module` con BUILD_REVISION = el commit, la publica en GHCR (privado, ligado al repositorio, con el
+# GITHUB_TOKEN del flujo: ningún token personal) y sube el artefacto dvi-image-sha256-<hex>, que es lo que el DVI comprueba
+# para ligar el digest a esta ejecución. El registro en el DVI lo hace dvi-register.yml cuando esta ejecución termina.
+#
+# Necesita:
+# - la variable del repositorio DVI_BASE_REF: el commit de Pimia-AI/dvi-base sobre el que se construye el módulo;
+# dvi-base es público: se clona en el commit fijado, sin credencial.
+name: dvi-image
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: dvi-image-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  image:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      MODULE_DIR: __DIR__
+      DVI_BASE_REPOSITORY: Pimia-AI/dvi-base
+      DVI_BASE_REF: ${{ vars.DVI_BASE_REF }}
+    steps:
+      - name: El repositorio de la vertical, en el commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          path: vertical
+          persist-credentials: false
+
+      - name: dvi-base, en el commit fijado
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: ${{ env.DVI_BASE_REPOSITORY }}
+          ref: ${{ env.DVI_BASE_REF }}
+          path: base
+          persist-credentials: false
+
+      - name: El módulo sobre su carpeta de dvi-base
+        run: |
+          set -euo pipefail
+          test -n "$DVI_BASE_REF" || { echo "Falta la variable del repositorio DVI_BASE_REF (el commit de dvi-base)"; exit 1; }
+          rm -rf "base/$MODULE_DIR" && mkdir -p "base/$MODULE_DIR"
+          git -C vertical archive HEAD | tar -x -C "base/$MODULE_DIR"
+          echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
+      - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+
+      - uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Construir y publicar
+        id: build
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: base
+          file: base/${{ env.MODULE_DIR }}/Dockerfile
+          target: module
+          build-args: BUILD_REVISION=${{ github.sha }}
+          tags: ${{ env.IMAGE }}:${{ github.sha }}
+          labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          push: true
+          provenance: false
+          sbom: false
+
+      - name: El digest, como nombre de artefacto
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          [[ "$DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "digest inesperado: $DIGEST"; exit 1; }
+          echo "ARTIFACT=dvi-image-sha256-${DIGEST#sha256:}" >> "$GITHUB_ENV"
+          printf '%s@%s\n' "$IMAGE" "$DIGEST" > image-ref.txt
+          echo "Imagen: $IMAGE@$DIGEST (commit $GITHUB_SHA)" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ${{ env.ARTIFACT }}
+          path: image-ref.txt
+          retention-days: 90
+          if-no-files-found: error

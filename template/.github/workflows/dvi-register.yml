@@ -1,0 +1,77 @@
+# Registra en el DVI la construcción de dvi-image (docs/api.md §22.4): cuando dvi-image termina con éxito (el DVI exige la
+# ejecución terminada), lee el digest del nombre de su artefacto, registra la versión del commit (o toma la que ya existe) y
+# registra el suceso `construido` con `build.image`. El DVI lo comprueba en GitHub y lee las migraciones en el commit.
+#
+# Necesita:
+# - el secreto DVI_CI_TOKEN: el token de un principal del DVI emitido para esto, con `leer` y `publicar` sobre la vertical y
+#   nada más (sin entornos). Nunca sale del almacén de secretos: solo va en la cabecera, desde un fichero 0600;
+# - las variables del repositorio DVI_URL (p. ej. https://dvi-api.taskai.work/v1), DVI_VERTICAL (la clave de la vertical) y
+#   DVI_ENTREGABLE_ID (el entregable modulo_backend del módulo). No son secretos.
+name: dvi-register
+
+on:
+  workflow_run:
+    workflows: [dvi-image]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  register:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      DVI_URL: ${{ vars.DVI_URL }}
+      DVI_VERTICAL: ${{ vars.DVI_VERTICAL }}
+      DVI_ENTREGABLE_ID: ${{ vars.DVI_ENTREGABLE_ID }}
+    steps:
+      - name: Registrar la construcción en el DVI
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DVI_CI_TOKEN: ${{ secrets.DVI_CI_TOKEN }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          COMMIT: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          for v in DVI_URL DVI_VERTICAL DVI_ENTREGABLE_ID DVI_CI_TOKEN; do test -n "${!v}" || { echo "Falta $v"; exit 1; }; done
+          umask 077
+          hdr="$(mktemp)"; trap 'rm -f "$hdr"' EXIT
+          printf 'authorization: Bearer %s\n' "$DVI_CI_TOKEN" > "$hdr"
+          unset DVI_CI_TOKEN
+          dvi() { # dvi <método> <ruta> [cuerpo] → imprime el código HTTP en la primera línea y el cuerpo después
+            curl -sS -o /tmp/dvi-body -w '%{http_code}\n' -X "$1" -H @"$hdr" -H 'content-type: application/json' \
+              ${3:+--data "$3"} "$DVI_URL$2"; cat /tmp/dvi-body; echo; }
+
+          name="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts" --jq \
+            '[.artifacts[].name | select(test("^dvi-image-sha256-[0-9a-f]{64}$"))] | if length == 1 then .[0] else error("se esperaba un artefacto dvi-image-sha256-<hex>") end')"
+          digest="sha256:${name#dvi-image-sha256-}"
+          repository="ghcr.io/${GITHUB_REPOSITORY,,}"
+          base="/verticales/$DVI_VERTICAL/entregables/$DVI_ENTREGABLE_ID"
+          echo "Imagen $repository@$digest, commit $COMMIT, ejecución $RUN_ID"
+
+          # La versión del commit: nueva (201), la misma (200) o ya registrada con otra nota o estado (409 con su número).
+          out="$(dvi POST "$base/versiones" "$(jq -nc --arg r "$GITHUB_REPOSITORY" --arg c "$COMMIT" '{repo: $r, commit: $c}')")"
+          code="$(head -1 <<<"$out")"; body="$(tail -n +2 <<<"$out")"
+          case "$code" in
+            200|201) version="$(jq -r '.version' <<<"$body")" ;;
+            409) version="$(jq -r 'select(.error == "conflicto_idempotencia") | .detalle.version // empty' <<<"$body")" ;;
+            *) version="" ;;
+          esac
+          [[ "$version" =~ ^[0-9]+$ ]] || { echo "No se pudo registrar la versión ($code): $(jq -c '{error, message, detalle}' <<<"$body")"; exit 1; }
+          echo "Versión $version"
+
+          # La construcción (§22.1). Si la versión ya tiene una, vale solo si es este mismo digest.
+          out="$(dvi POST "$base/versiones/$version/estados" "$(jq -nc --arg run "$RUN_ID" --arg d "$digest" --arg repo "$repository" \
+            '{estado: "construido", build: {ci: "github_actions", run_id: $run, digest: $d, image: {repository: $repo}}}')")"
+          code="$(head -1 <<<"$out")"; body="$(tail -n +2 <<<"$out")"
+          if [ "$code" = 201 ]; then echo "Construcción registrada: versión $version, $repository@$digest" >> "$GITHUB_STEP_SUMMARY"; exit 0; fi
+          if [ "$code" = 409 ] && [ "$(jq -r .error <<<"$body")" = transicion_invalida ]; then
+            out="$(dvi GET "/verticales/$DVI_VERTICAL/entregables")"; body="$(tail -n +2 <<<"$out")"
+            ya="$(jq -r --arg e "$DVI_ENTREGABLE_ID" --argjson v "$version" '.entregables[] | select(.id == $e) | .versiones[] | select(.version == $v) | .estados[] | select(.build != null) | .build.digest' <<<"$body")"
+            if [ "$ya" = "$digest" ]; then echo "La versión $version ya tenía esta construcción"; exit 0; fi
+            echo "La versión $version ya tiene otra construcción (${ya:-ninguna con build}) o no admite una: no se registra"; exit 1
+          fi
+          echo "El DVI no registró la construcción ($code): $(jq -c '{error, message, detalle}' <<<"$body")"; exit 1

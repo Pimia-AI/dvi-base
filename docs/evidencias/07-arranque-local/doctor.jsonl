@@ -1,0 +1,18 @@
+# 2026-11-08T14:22:05Z  npm run doctor (todo arriba)
+{"check":"module.json","status":"ok","module":"dvi-base-notes","schema":"notes","screens":1}
+{"check":"migrations","status":"ok","files":1}
+{"check":"docker","status":"ok","version":"29.2.1"}
+{"check":"service:postgres","status":"ok","state":"running","health":"healthy"}
+{"check":"service:migrate","status":"ok","state":"exited","health":null}
+{"check":"service:pimia-double","status":"ok","state":"running","health":"healthy"}
+{"check":"service:module","status":"ok","state":"running","health":"healthy"}
+{"check":"service:dev-host","status":"ok","state":"running","health":"healthy"}
+{"check":"module:healthz","status":"ok"}
+{"check":"module:readyz","status":"ok"}
+{"check":"module:version","status":"ok","module":"dvi-base-notes","commit":null,"applied":1,"expected":1}
+{"check":"pimia:bootstrap","status":"ok","mode":"double","modulos_propios":["dvi-base-notes"]}
+{"check":"pimia:me","status":"ok","mode":"double"}
+{"check":"ui","status":"ok","frameAncestors":"http://127.0.0.1:7161"}
+{"check":"host","status":"ok"}
+{"result":"ok"}
+# código de salida: 0

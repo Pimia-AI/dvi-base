@@ -1,0 +1,3 @@
+/* Las pantallas del módulo usan el kit tal cual. */
+@import "@dvi-base/kit/styles.css";
+@source "./";

@@ -1,0 +1,12 @@
+{
+  "owner": "__OWNER__",
+  "key": "__KEY__",
+  "name": "__NAME__",
+  "schema": "__SCHEMA__",
+  "ui": {
+    "screens": [
+      { "id": "home", "title": "__NAME__", "path": "/app/__KEY__", "menu": { "group": "__NAME__", "icon": "layout-grid", "order": 10 } }
+    ]
+  },
+  "needs_from_pimia": []
+}

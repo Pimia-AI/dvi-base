@@ -1,0 +1,9 @@
+{"step":"postgres","status":"ok","ms":1290}
+{"step":"database","status":"ok","ms":33}
+{"step":"migrations","status":"ok","ms":20,"applied":["0001_notes"]}
+{"step":"seed","status":"ok","ms":7,"rows":5}
+{"step":"pimia-double","status":"ok","ms":7,"url":"http://127.0.0.1:7162"}
+{"step":"build-ui","status":"ok","ms":955}
+{"step":"module","status":"ok","ms":325,"url":"http://127.0.0.1:7160","ready":true}
+{"step":"host","status":"ok","ms":8,"url":"http://127.0.0.1:7161"}
+{"result":"ok","urls":{"host":"http://127.0.0.1:7161/m/dvi-base-notes/notes","module":"http://127.0.0.1:7160/app/notes","version":"http://127.0.0.1:7160/api/version"}}

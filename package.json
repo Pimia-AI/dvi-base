@@ -1,0 +1,33 @@
+{
+  "name": "dvi-base",
+  "private": true,
+  "description": "Base mínima de un módulo de Pimia ERP para las verticales del integrador",
+  "license": "SEE LICENSE IN LICENSE",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
+  "scripts": {
+    "test": "node --import tsx --test \"tests/**/*.test.ts\" \"packages/*/tests/**/*.test.ts\" \"packages/*/tests/**/*.test.tsx\" \"examples/*/tests/**/*.test.ts\"",
+    "test:db": "node --import tsx packages/module/src/testing/with-postgres.ts \"packages/*/tests-db/**/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "up": "npm run -s up --prefix examples/notes",
+    "down": "npm run -s down --prefix examples/notes",
+    "doctor": "npm run -s doctor --prefix examples/notes",
+    "image": "npm run -s image --prefix examples/notes",
+    "new-module": "node packages/module/bin/new-module.mjs"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.3",
+    "@types/node": "24.19.2",
+    "@vitejs/plugin-react": "6.1.2",
+    "tailwindcss": "4.3.3",
+    "tsx": "4.20.6",
+    "typescript": "5.7.2",
+    "vite": "8.3.5"
+  },
+  "engines": {
+    "node": ">=24.22.0"
+  }
+}
