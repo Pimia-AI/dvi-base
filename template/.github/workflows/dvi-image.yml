@@ -1,8 +1,12 @@
-# La imagen de producción del módulo «__NAME__», una vez por commit (docs/api.md §22.4 del DVI).
+# La imagen de producción del módulo «__NAME__», una por VERSIÓN (docs/api.md §22.4 del DVI).
 # Activo cuando este módulo es la raíz de su propio repositorio de vertical.
-# Construye el target `module` con BUILD_REVISION = el commit, la publica en GHCR (privado, ligado al repositorio, con el
-# GITHUB_TOKEN del flujo: ningún token personal) y sube el artefacto dvi-image-sha256-<hex>, que es lo que el DVI comprueba
-# para ligar el digest a esta ejecución. El registro en el DVI lo hace dvi-register.yml cuando esta ejecución termina.
+#
+# Las versiones las define el integrador con una etiqueta de Git `v*` (p. ej. `git tag v5 && git push origin v5`):
+# - al empujar una etiqueta `v*`: construye el target `module` con BUILD_REVISION = el commit etiquetado, lo publica en GHCR
+#   (privado, ligado al repositorio, con el GITHUB_TOKEN del flujo: ningún token personal) con las etiquetas de imagen del
+#   commit y de la versión, y sube el artefacto dvi-image-sha256-<hex>, que es lo que el DVI comprueba para ligar el digest a
+#   esta ejecución. El registro en el DVI lo hace dvi-register.yml cuando esta ejecución termina;
+# - en un push a main: solo comprueba que la imagen construye; no publica nada ni crea ninguna versión.
 #
 # Necesita:
 # - la variable del repositorio DVI_BASE_REF: el commit de Pimia-AI/dvi-base sobre el que se construye el módulo;
@@ -12,13 +16,14 @@ name: dvi-image
 on:
   push:
     branches: [main]
+    tags: ['v*']
 
 permissions:
   contents: read
   packages: write
 
 concurrency:
-  group: dvi-image-${{ github.sha }}
+  group: dvi-image-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -26,6 +31,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
+      DOCKER_BUILD_RECORD_UPLOAD: false
       MODULE_DIR: __DIR__
       DVI_BASE_REPOSITORY: Pimia-AI/dvi-base
       DVI_BASE_REF: ${{ vars.DVI_BASE_REF }}
@@ -51,10 +57,17 @@ jobs:
           rm -rf "base/$MODULE_DIR" && mkdir -p "base/$MODULE_DIR"
           git -C vertical archive HEAD | tar -x -C "base/$MODULE_DIR"
           echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            [[ "$GITHUB_REF_NAME" =~ ^v[0-9A-Za-z._-]{1,60}$ ]] || { echo "Etiqueta de versión no válida: $GITHUB_REF_NAME"; exit 1; }
+            echo "PUBLISH=true" >> "$GITHUB_ENV"
+          else
+            echo "PUBLISH=false" >> "$GITHUB_ENV"
+          fi
 
       - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
 
       - uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+        if: env.PUBLISH == 'true'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -68,13 +81,18 @@ jobs:
           file: base/${{ env.MODULE_DIR }}/Dockerfile
           target: module
           build-args: BUILD_REVISION=${{ github.sha }}
-          tags: ${{ env.IMAGE }}:${{ github.sha }}
-          labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.PUBLISH == 'true' && format('{0}:{1}', env.IMAGE, github.ref_name) || '' }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.version=${{ github.ref_name }}
+          push: ${{ env.PUBLISH == 'true' }}
           provenance: false
           sbom: false
 
       - name: El digest, como nombre de artefacto
+        if: env.PUBLISH == 'true'
         env:
           DIGEST: ${{ steps.build.outputs.digest }}
         run: |
@@ -82,9 +100,10 @@ jobs:
           [[ "$DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "digest inesperado: $DIGEST"; exit 1; }
           echo "ARTIFACT=dvi-image-sha256-${DIGEST#sha256:}" >> "$GITHUB_ENV"
           printf '%s@%s\n' "$IMAGE" "$DIGEST" > image-ref.txt
-          echo "Imagen: $IMAGE@$DIGEST (commit $GITHUB_SHA)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Versión $GITHUB_REF_NAME: $IMAGE@$DIGEST (commit $GITHUB_SHA)" >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: env.PUBLISH == 'true'
         with:
           name: ${{ env.ARTIFACT }}
           path: image-ref.txt

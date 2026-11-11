@@ -37,9 +37,18 @@ Para trabajar en la base: `npm install`, `npm test` (pruebas unitarias) y `npm r
    - un `AGENTS.md` para el agente que lo construye.
 2. **Construir el dominio** en el módulo: tablas en `migrations/` (nombres `0001_nombre.sql`), rutas y pantallas con el kit. Se prueba en local contra el doble de Pimia (`npm run up` desde la carpeta del módulo).
 3. **Darle su repositorio.** La raíz del módulo es la raíz del repositorio de la vertical: `module.json` y `migrations/` en la raíz, donde los lee el panel de verticales del integrador.
-4. **Imagen por CI, una por commit.** La plantilla trae dos flujos de GitHub Actions:
-   - `.github/workflows/dvi-image.yml` construye la imagen de producción (target `module`, con `BUILD_REVISION` igual al commit) sobre esta base en el commit fijado, la publica en GHCR como paquete privado del repositorio y deja su digest;
-   - `.github/workflows/dvi-register.yml` la registra como la construcción de la versión de ese commit.
+4. **Crear una versión con una etiqueta de Git.** Las versiones las define el integrador: cuando el trabajo está listo para entregarse, marca el commit con una etiqueta `v*` y la empuja:
+
+   ```sh
+   git tag v5
+   git push origin v5
+   ```
+
+   Los commits a `main` sin etiqueta no crean nada en el panel de verticales: solo se comprueba que la imagen construye. Al empujar la etiqueta, la plantilla hace dos cosas con sus dos flujos de GitHub Actions:
+   - `.github/workflows/dvi-image.yml` construye la imagen de producción del commit etiquetado (target `module`, con `BUILD_REVISION` igual al commit) sobre esta base en el commit fijado, la publica en GHCR como paquete privado del repositorio y deja su digest;
+   - `.github/workflows/dvi-register.yml` la registra como la construcción de la versión de ese commit, con la etiqueta en su nota («versión 5 · v5»).
+
+   Cada versión es una imagen fija: un commit, un digest.
 5. **Desplegar por digest** en el servidor del integrador: `deploy/compose.server.yaml` arranca exactamente la imagen `<repositorio>@sha256:…` que le indica el ejecutor de entregas, con la credencial de lectura del registro del propio integrador. El mismo digest en desarrollo, piloto y producción.
 
 ## Qué hay aquí

@@ -12,10 +12,14 @@ npm run image    # imagen de producción
 
 ## La imagen de producción, por CI (cuando este módulo es la raíz de su repositorio)
 
-`.github/workflows/dvi-image.yml` construye la imagen una vez por commit de `main` (target `module`, `BUILD_REVISION` = el
-commit), la publica en GHCR (privada, con el `GITHUB_TOKEN` del flujo) y deja su digest como nombre de artefacto;
-`.github/workflows/dvi-register.yml` la registra en el DVI como la construcción de la versión de ese commit (docs/api.md §22
-del DVI). En el servidor, `deploy/compose.server.yaml` arranca exactamente ese digest con el `dvi-executor`.
+Una versión nace cuando marcas un commit con una etiqueta `v*` y la empujas (`git tag v5` y `git push origin v5`). Los
+commits a `main` sin etiqueta solo comprueban que la imagen construye: no publican nada ni crean ninguna versión.
+
+Con la etiqueta, `.github/workflows/dvi-image.yml` construye la imagen del commit etiquetado (target `module`,
+`BUILD_REVISION` = el commit), la publica en GHCR (privada, con el `GITHUB_TOKEN` del flujo) y deja su digest como nombre de
+artefacto; `.github/workflows/dvi-register.yml` la registra en el DVI como la construcción de la versión de ese commit, con la
+etiqueta en su nota (docs/api.md §22 del DVI). En el servidor, `deploy/compose.server.yaml` arranca exactamente ese digest
+con el `dvi-executor`.
 
 Hace falta en el repositorio: la variable `DVI_BASE_REF` (el commit de dvi-base, que es público y se clona sin credencial),
 el secreto `DVI_CI_TOKEN` (un principal del DVI con `leer` y `publicar` sobre la vertical) y las variables `DVI_URL`,
