@@ -82,3 +82,24 @@ test('PIMIA_HOST_ORIGINS: orígenes exactos o con {tenant}; http solo a loopback
   assert.throws(() => loadUi(dir, readManifest({ owner: 'dvi-base', key: 'x', name: 'X', schema: 'x' }), ORIGINS), /pantallas/)
   assert.throws(() => loadUi(join(dir, 'no-existe'), manifest, ORIGINS), /index\.html/)
 })
+
+test('PIMIA_HOST_ORIGINS como lista exacta (contrato §9): el panel de Pimia y la app del integrador, tal cual en frame-ancestors y en la meta', async () => {
+  const EXACT = readHostOrigins('https://panel.taskai.work, https://app.integrator.example')
+  assert.deepEqual(EXACT, ['https://panel.taskai.work', 'https://app.integrator.example'])
+  assert.equal(frameAncestors(EXACT), 'https://panel.taskai.work https://app.integrator.example', 'los mismos orígenes, en el mismo orden y sin comodines')
+  const server = createModuleServer({ routes, handlers }, { ui: loadUi(dir, manifest, EXACT) })
+  servers.push(server)
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
+  const port = (server.address() as AddressInfo).port
+  const reply = await call(port, 'GET', '/app/notes?pimia_protocol=1&pimia_host=https%3A%2F%2Fpanel.taskai.work&pimia_tenant=demo&pimia_company=1')
+  assert.equal(reply.status, 200)
+  const csp = String(reply.headers['content-security-policy'])
+  assert.equal(/frame-ancestors ([^;]+)/.exec(csp)?.[1], 'https://panel.taskai.work https://app.integrator.example')
+  assert.doesNotMatch(csp, /\*/, 'ni un comodín')
+  assert.match(reply.body, /<meta name="pimia-host-origins" content="https:\/\/panel\.taskai\.work,https:\/\/app\.integrator\.example">/)
+  // La API no cambia: nadie la embebe.
+  moduleHeaders(await call(port, 'GET', '/api/notes', { company: '1' }), 'API')
+  // Un HEAD a una pantalla es 405 con las cabeceras de la API: la comprobación de frame-ancestors se hace con un GET.
+  const head = await call(port, 'HEAD', '/app/notes')
+  assert.equal(head.status, 405); moduleHeaders(head, 'HEAD /app/notes')
+})

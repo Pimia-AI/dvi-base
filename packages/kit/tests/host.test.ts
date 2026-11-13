@@ -198,3 +198,26 @@ test('regresión (revisión, 3.ª pasada): al reconectar en la misma ventana, un
   assert.deepEqual(sent.map(s => s.message.type), ['ready', 'ready'])
   second.close()
 })
+
+test('lista exacta de anfitriones (contrato §9): acepta pimia_host=https://panel.taskai.work y rechaza un origen que no está en la lista', async () => {
+  const PANEL = 'https://panel.taskai.work'
+  const EXACT = [PANEL, 'https://app.integrator.example']
+  assert.deepEqual(readHostContext(url({ ...CONTEXT, pimia_host: PANEL }), EXACT), { hostOrigin: PANEL, tenant: 'demo', companyId: '12', locale: 'es-ES', theme: 'light' })
+  assert.equal(readHostContext(url({ ...CONTEXT, pimia_host: 'https://app.integrator.example' }), EXACT).hostOrigin, 'https://app.integrator.example')
+  // La aplicación de la instancia ya no es el anfitrión; ni nada que se le parezca al panel.
+  for (const bad of [HOST, 'https://evil.example', 'https://panel.taskai.work.evil.example', 'https://x.panel.taskai.work', 'http://panel.taskai.work',
+    'https://panel.taskai.work:8443', 'https://Panel.taskai.work', 'https://panel.taskai.work/', '']) {
+    assert.throws(() => readHostContext(url({ ...CONTEXT, pimia_host: bad }), EXACT), (e: unknown) => e instanceof HostError && e.code === 'origin', bad)
+    assert.equal(originAllowed(bad, EXACT), false, bad)
+  }
+  // Conectado al panel: solo le habla a él, y una sesión de otro origen de la lista no vale.
+  const { win, sent, deliver } = frame({ ...CONTEXT, pimia_host: PANEL })
+  const host = connectHost({ allowedOrigins: EXACT, window: win })
+  assert.equal(sent[0]?.targetOrigin, PANEL)
+  const pending = host.getSession()
+  deliver(session({ token: 'de-la-app' }), 'https://app.integrator.example')
+  deliver(session(), PANEL)
+  assert.equal((await pending).token, 'tok-1')
+  assert.ok(sent.every(entry => entry.targetOrigin === PANEL), 'nunca a otro origen ni a *')
+  host.close()
+})

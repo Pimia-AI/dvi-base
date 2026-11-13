@@ -33,7 +33,11 @@ export function frameAncestors(hostOrigins: readonly string[]): string {
   return hostOrigins.map(origin => origin.replace('://{tenant}.', '://*.')).join(' ')
 }
 
-/** `PIMIA_HOST_ORIGINS`: orígenes exactos o `https://{tenant}.dominio`, separados por comas. `http://` solo a loopback. */
+/**
+ * `PIMIA_HOST_ORIGINS`: la lista exacta de anfitriones, separados por comas (contrato embebido §9): el panel de Pimia y, si
+ * existe, la app del producto del integrador. `https://{tenant}.dominio` se admite por compatibilidad, pero está
+ * desaconsejado. `http://` solo a loopback.
+ */
 export function readHostOrigins(value: string | undefined): string[] {
   const origins = (value ?? '').split(',').map(origin => origin.trim()).filter(Boolean)
   if (!origins.length) throw new Error('Falta configuración: PIMIA_HOST_ORIGINS')

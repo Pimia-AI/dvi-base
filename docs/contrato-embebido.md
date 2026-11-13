@@ -2,20 +2,28 @@
 
 **Fecha:** 08/11/2026. **Estado:** versión 1, aprobada. El token de módulo lo emite Pimia ERP, firmado, y la sesión
 del módulo lo valida sin reenviarlo (§1, §2, §4, §7, §8, §11 a §13). La interfaz del módulo es embebida, al estilo
-Shopify.
+Shopify. **Revisión del 13/11/2026:** quién es el anfitrión y su ruta (§0 y §5), cómo pide el token (§4), la lista exacta
+de anfitriones del módulo (§9) y la respuesta a la pregunta 13.1.
 
-**Quién implementa qué:**
+## 0. Quién implementa qué y quién es el anfitrión
 
 | Parte | Quién | Dónde |
 | --- | --- | --- |
 | El módulo (backend y pantallas) | El integrador, con la base | `dvi-base`: `packages/module` y `packages/kit` (lado módulo del contrato) |
 | La declaración y el emisor del token de módulo | Pimia | Pimia ERP: `/bootstrap`, claves públicas, emisión, estado y revocación (§3, §4) |
 | La petición del token en automatización (D) | DVI | El DVI comprueba la delegación y lo pide al ERP de servidor a servidor (§4.4) |
-| El anfitrión | Pimia | El panel web de Pimia ERP (§5 a §9) |
+| El anfitrión | Pimia, o el integrador con la plantilla | El panel de Pimia o la copia de la plantilla web de Pimia que sirve la app del producto del integrador (§5 a §9) |
 | El anfitrión de desarrollo | La base | `dvi-base/packages/dev-host` (§11): el lado anfitrión, solo para local |
 
-Lo que este documento llama **anfitrión** es el frontend de Pimia ERP, servido por Pimia. El **módulo** corre en el
-servidor del integrador. Nada de lo que sigue obliga al integrador a tocar el frontend de Pimia.
+Lo que este documento llama **anfitrión** es el frontend que embebe las pantallas del módulo, y es uno de estos dos:
+
+- **el panel de Pimia**, servido por Pimia (`https://panel.taskai.work` en el entorno de desarrollo de Pimia);
+- **la copia de la plantilla web de Pimia** que sirve la app del producto del integrador (`https://app.<dominio>`),
+  cuando exista.
+
+En los dos, las pantallas del módulo cuelgan de la ruta **`/pimia/m/{key}/*`** (§5). El anfitrión ya no es la aplicación
+de cada instancia (`https://{instancia}.<dominio>`). El **módulo** corre en el servidor del integrador. Nada de lo que
+sigue obliga al integrador a tocar el frontend de Pimia.
 
 ## 1. Principios
 
@@ -57,8 +65,9 @@ servidor del integrador. Nada de lo que sigue obliga al integrador a tocar el fr
 - `owner`: la cuenta de integrador de Pimia ERP dueña del módulo. Con `key`, forma la audiencia del token (`owner/key`).
 - `key`: la de `modulos_propios[].key` (máximo 63, `IntegradorPlanRequest.php:67`). El backend exige que el plan de
   la instancia la lleve (`not_in_plan` si no; §4.3).
-- `scopes`: los permisos propios del módulo. Pimia ERP los da por rol en el token (`scope`); cada ruta del módulo
-  exige el suyo (`withModule(…, { scope })`) y sin él responde `403 insufficient_scope`.
+- `scopes`: los permisos propios del módulo. Pimia ERP pone en el token (`scope`) todos los que el módulo declara, a
+  todos los miembros de la empresa (§4.1); los permisos finos de cada persona los guarda el módulo con el `sub`. Cada
+  ruta del módulo exige el suyo (`withModule(…, { scope })`) y sin él responde `403 insufficient_scope`.
 - `ui.screens[].path`: siempre bajo `/app/` y con el mismo origen que la API. `menu.icon` es un nombre de la
   librería de iconos del anfitrión (lucide), no una imagen.
 - `needs_from_pimia`: las operaciones de la API de Pimia ERP que el módulo usa (`[{operation, scope}]`; Pimia ERP las
@@ -83,11 +92,11 @@ Los casos compartidos están en [`docs/contrato/module-scope-grammar.json`](cont
 porque en JavaScript, sin la bandera `m`, ya es fin absoluto; en PHP el ERP usa `\z`. Si la gramática cambia, cambian
 los dos ficheros en los dos repos.
 
-**En Pimia ERP**, el integrador registra el módulo como hoy (`IntegradorModuloController`) y le **añade la
-declaración de la interfaz** (lo de `ui` de arriba). El **origen** donde corre no es del módulo sino de cada
-instalación (`https://notes.integrator.example`): lo fija la instalación (D16 del plan del hito 5) o, en la empresa
-de pruebas, el integrador desde el DVI. Hoy Pimia ERP no guarda ninguna dirección de módulo («sin URL, que es del
-despliegue del fork», `TenantModulesController.php:88-89`).
+**En Pimia ERP**, el registro del módulo lleva además la **declaración de la interfaz** (lo de `ui` de arriba). El
+**origen** donde corre (`https://notes.integrator.example`) se declara **una vez por módulo, en el DVI**, y el registro
+del módulo desde el taller lo lleva a Pimia ERP para la empresa de desarrollo de la vertical: es un origen declarado, sin
+prueba de posesión. Para los negocios clientes, el origen y las pantallas salen de la **versión publicada** del módulo,
+y la prueba de posesión del origen se exige al publicar.
 
 ## 3. Lo que publica `/bootstrap` (aditivo; contrato 1.13.0 propuesto)
 
@@ -113,9 +122,9 @@ tiene un origen fijado:
 
 ## 4. El token de módulo
 
-Lo **emite Pimia ERP** y solo Pimia ERP. Lo piden el anfitrión, para la persona que está en el panel (E y producción),
-o el DVI, de servidor a servidor, para un agente con delegación comprobada (D). Ni el módulo ni el integrador lo
-fabrican, ni hay clientes OAuth por instancia ni suplantación de personas.
+Lo **emite Pimia ERP** y solo Pimia ERP. Lo piden el anfitrión, para la persona que tiene abierto el panel o la app
+(E y producción, §4.4), o el DVI, de servidor a servidor, para un agente con delegación comprobada (D). Ni el módulo ni
+el integrador lo fabrican, ni hay suplantación de personas.
 
 ### 4.1 Forma
 
@@ -127,12 +136,12 @@ Un JWT compacto (`typ: "pimia-module+jwt"`), firmado con **clave asimétrica** d
 | `iss` | El origen de la instancia (`https://demo.taskai.work`) |
 | `tenant` | El slug de la instancia |
 | `sub` | La persona (id de Pimia ERP); `name`, su nombre para mostrar |
-| `act` | `{sub}`: quién lo pidió en nombre de la persona (el DVI o un agente en D). Sin `act`, lo pidió ella desde el panel |
+| `act` | `{sub}`: quién lo pidió en nombre de la persona (el DVI o un agente en D). Sin `act`, lo pidió el anfitrión para ella |
 | `company` | La empresa. Una sola: cambiar de empresa es pedir otro token |
 | `aud` | `owner/key` del módulo. Una sola audiencia |
-| `scope` | Los permisos del módulo que tiene la persona (de los `scopes` declarados), separados por espacios |
+| `scope` | Todos los ámbitos que el módulo declara, separados por espacios: los de su registro en una empresa de desarrollo y los de su versión publicada en un negocio cliente. No se piden menos ni otros |
 | `sid` | La sesión de módulo: lo que se revoca |
-| `jti`, `iat`, `exp` | Identificador y vida: 10 minutos como máximo |
+| `jti`, `iat`, `exp` | Identificador y vida: 10 minutos como máximo y, si lo pidió el anfitrión, nunca más que el token de la persona del que sale |
 
 ### 4.2 Lo que publica la instancia
 
@@ -170,13 +179,39 @@ El mismo validador para el doble, para D y para E:
 
 ### 4.4 Quién lo pide
 
-- **E y producción:** el anfitrión, con la sesión del panel y la empresa activa. Sin `act`.
+- **E y producción: el anfitrión**, desde su servidor y nunca desde el navegador, con el token de acceso OAuth de la
+  persona y la empresa activa:
+
+  ```http
+  POST https://{instancia}/api/v1/modules/{key}/sessions
+  Authorization: Bearer <token de acceso OAuth de la persona>
+  company: <id de la empresa>
+  ```
+
+  - Cuerpo vacío o `{}`. Sin cookie: es solo para el bearer.
+  - Puede pedirla el panel de Pimia y, en las instancias de sus negocios clientes, la app de la propia vertical. Nunca un
+    token suelto, de un solo propósito ni de otra app.
+  - Se da a **todos los miembros** de la empresa, sea cual sea su papel, con todos los ámbitos declarados (§4.1).
+  - Una sesión (`sid`) por token de la persona, módulo y empresa. Pedirla otra vez la reutiliza y firma un token nuevo:
+    `201` si la sesión es nueva y `200` si se reutiliza.
+  - Dura 10 minutos como mucho y nunca más que el token de la persona. Si a este le quedan menos de 60 s, `401
+    host_token_expiring`: el anfitrión renueva el suyo y vuelve a pedirla.
+  - Respuesta, con `expires_at` en **ISO 8601** (el kit lo exige así):
+
+    ```json
+    {"data": {"token": "<JWT>", "expires_at": "2026-11-14T10:10:00Z", "sid": "ms_…", "tenant": "demo",
+              "audience": "owner/key", "company": {"id": "1", "name": "…"}, "user": {"id": "1", "name": "…"}}}
+    ```
+
+  - El anfitrión lo pasa al iframe solo por `postMessage` (`session`, §6). Nunca en la URL, en registros ni en
+    `localStorage`. Sin `act`.
 - **D (automatización):** el agente, identificado ante el DVI, pide sesión para su empresa de pruebas. El DVI comprueba
   la delegación (concesión vigente, vertical, instalación, alcance) y la solicita al ERP de servidor a servidor. El ERP
   verifica la propiedad y emite, con `act` = quién lo pidió.
 - **A (el doble de Pimia):** `packages/pimia-double` emite con esta misma forma, para el día a día y las pruebas.
 
-Se revoca al cerrar la sesión del panel, al quitar el módulo del plan, al retirar la concesión del agente o a mano.
+Se revoca al cerrar la sesión del panel, al caducar o revocarse el token de la persona del que salió, al quitar el
+módulo del plan, al retirar la concesión del agente o a mano.
 
 ### 4.5 Suite de contrato
 
@@ -191,22 +226,23 @@ entera (`docs/evidencias/10-sesion-de-modulo/`). Contra el ERP real, cuando exis
 1. Lee `/bootstrap`. Por cada módulo con `ui`, añade al menú sus pantallas (`menu.group`, `title`, `menu.icon`,
    `menu.order`). Hoy el panel ya esconde o enseña entradas por `modulos_propios` (`nav-data.ts:372-381` del fork de vet);
    esto lo hace sin fork y para cualquier módulo.
-2. La URL del anfitrión para una pantalla es `/m/{key}/{rest}`, donde `{rest}` es la ruta del módulo sin
-   `/app/`. Así funcionan los enlaces directos y el botón Atrás.
+2. La URL del anfitrión para una pantalla es `/pimia/m/{key}/{rest}`, donde `{rest}` es la ruta del módulo sin
+   `/app/`: `/pimia/m/{key}/{rest}` corresponde a `{origin}/app/{rest}`. Así funcionan los enlaces directos y el botón
+   Atrás. El anfitrión es el panel de Pimia o la copia de la plantilla del integrador (§0); los dos usan esta ruta.
 3. Pinta un iframe que ocupa todo el área de contenido:
 
 ```html
-<iframe src="https://notes.integrator.example/app/notes?pimia_protocol=1&pimia_host=https%3A%2F%2Fdemo.taskai.work&pimia_tenant=demo&pimia_company=12&pimia_locale=es-ES&pimia_theme=light"
+<iframe src="https://notes.integrator.example/app/notes?pimia_protocol=1&pimia_host=https%3A%2F%2Fpanel.taskai.work&pimia_tenant=demo&pimia_company=12&pimia_locale=es-ES&pimia_theme=light"
         title="Notas" referrerpolicy="no-referrer"
         sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"></iframe>
 ```
 
 - En la URL va solo contexto que no es secreto, para que la primera pintura salga bien (tema, idioma, empresa).
   **El token nunca va en la URL.**
-- `pimia_host` es el origen del anfitrión. El módulo no puede deducirlo (con `referrerpolicy="no-referrer"` no hay
-  referente, y `ancestorOrigins` no existe en Firefox), así que lo recibe aquí, **solo lo acepta si está en su lista**
-  (`PIMIA_HOST_ORIGINS`) y es el único origen al que envía mensajes. Añadido en el paso 5 al escribir el lado módulo
-  (`packages/kit/src/host.ts`).
+- `pimia_host` es el origen del anfitrión (el del panel o el de la app del integrador, no el de la instancia). El
+  módulo no puede deducirlo (con `referrerpolicy="no-referrer"` no hay referente, y `ancestorOrigins` no existe en
+  Firefox), así que lo recibe aquí, **solo lo acepta si está en su lista exacta** (`PIMIA_HOST_ORIGINS`, §9) y es el
+  único origen al que envía mensajes. Añadido en el paso 5 al escribir el lado módulo (`packages/kit/src/host.ts`).
 - `allow-same-origin` hace falta para que el módulo hable con su propio backend. Sin `allow-top-navigation`: el
   módulo no puede sacar a la persona del panel; para eso pide `open` (§6).
 
@@ -222,7 +258,7 @@ versión del protocolo. Un mensaje con otra versión o de otro origen se ignora.
 | `ready` | `{protocols: [1]}`, con `id` | Primer mensaje, al cargar. El anfitrión responde con `session` |
 | `request-session` | —, con `id` | Token caducado o a punto de caducar, o un `401` del backend. Respuesta: `session` |
 | `title` | `{title, breadcrumbs: [{text, path?}]}` | El anfitrión pone el título en la pestaña del navegador. Las migas son opcionales: el panel actual no las pinta |
-| `navigate` | `{path, replace?}` | El módulo cambió de vista. El anfitrión actualiza su URL (`/m/{key}/…`) sin recargar |
+| `navigate` | `{path, replace?}` | El módulo cambió de vista. El anfitrión actualiza su URL (`/pimia/m/{key}/…`) sin recargar |
 | `open` | `{target: "pimia", path}` | Ir a una pantalla de Pimia (p. ej. la ficha de un cliente). El anfitrión decide si la ruta vale |
 | `notice` | `{kind: "success" \| "error" \| "info", text}` | Una notificación breve con el sistema del anfitrión |
 | `error` | `{code, status}` | El módulo no puede seguir (`not_in_plan`, `forbidden`, `pimia_unavailable`…). El anfitrión puede pintar su propio estado |
@@ -239,7 +275,7 @@ versión del protocolo. Un mensaje con otra versión o de otro origen se ignora.
 **Comprobaciones obligatorias:**
 
 - **Módulo:** solo acepta mensajes de `window.parent` cuyo `event.origin` esté en sus orígenes de anfitrión
-  (`PIMIA_HOST_ORIGINS`, con el mismo patrón `{tenant}` que `PIMIA_BASE_URL`), y solo envía a ese origen (nunca a `*`).
+  (`PIMIA_HOST_ORIGINS`, la lista exacta del §9), y solo envía a ese origen (nunca a `*`).
   Comprueba que `session.tenant` y `session.company.id` coinciden con los de la URL; si no, `error`.
 - **Anfitrión:** solo acepta mensajes con `event.source === iframe.contentWindow` y `event.origin` igual al `origen`
   de `/bootstrap`, y envía la `session` solo a ese origen.
@@ -275,6 +311,16 @@ exactamente las cabeceras que hoy reenvía el panel de vet al módulo (`servidor
 
 ## 9. Seguridad del lado del módulo
 
+- **Los anfitriones permitidos** (`PIMIA_HOST_ORIGINS`) son una **lista exacta y declarada** de orígenes, separados por
+  comas y sin barra final:
+  - el panel de Pimia del entorno (`https://panel.taskai.work` en el entorno de desarrollo de Pimia);
+  - y, cuando exista, la app del producto del integrador (`https://app.<dominio>`).
+
+  Por ejemplo, `PIMIA_HOST_ORIGINS=https://panel.taskai.work,https://app.<dominio>`. De esa lista salen el
+  `frame-ancestors` de las pantallas (los mismos orígenes, en el mismo orden) y la lista con la que el kit acepta
+  `pimia_host` y el origen de los mensajes (§5 y §6). El patrón `https://{tenant}.<dominio>` queda **desaconsejado**,
+  porque el anfitrión ya no es la aplicación de cada instancia; se sigue admitiendo por compatibilidad (en
+  `frame-ancestors` pasa a `https://*.<dominio>`).
 - HTML de las pantallas: `Content-Security-Policy: frame-ancestors <orígenes del anfitrión>; default-src 'self'; …`.
   La API sigue con `frame-ancestors 'none'` (como hoy `MODULE_HEADERS`, `rutas.ts:33-38`).
 - Sin `X-Frame-Options` en las pantallas (lo sustituye `frame-ancestors`).
@@ -326,10 +372,10 @@ Es la misma pantalla y el mismo protocolo en los tres: cambia quién emite y qui
 **DVI:** identidad MCP del agente, delegación comprobada, solicitud de la empresa de pruebas, petición del
 token al ERP de servidor a servidor (§4.4), registro del origen de desarrollo, cuotas y auditoría.
 
-**Anfitrión (el panel web de Pimia ERP):**
+**Anfitrión (el panel de Pimia y la plantilla web de Pimia):**
 
 1. Menú por `modulos_propios[].ui.screens`.
-2. Ruta `/m/{key}/*` con el iframe del §5.
+2. Ruta `/pimia/m/{key}/*` con el iframe del §5.
 3. El intercambio de mensajes del §6 con sus comprobaciones, y la petición y renovación del token de módulo.
 4. Los estados del §8 (módulo caído, sin plan).
 
@@ -337,6 +383,9 @@ token al ERP de servidor a servidor (§4.4), registro del origen de desarrollo, 
 
 1. **Origen web del anfitrión.** ¿El panel de una instancia vive en `https://{tenant}.taskai.work`, igual que su API,
    o en otro dominio? Decide el valor por defecto de `PIMIA_HOST_ORIGINS` y el `frame-ancestors` del módulo.
+   **Respondida (13/11/2026):** en otro dominio. El anfitrión es el panel de Pimia (`https://panel.taskai.work` en el
+   entorno de desarrollo de Pimia) o la app del producto del integrador (`https://app.<dominio>`), nunca la instancia.
+   `PIMIA_HOST_ORIGINS` es la lista exacta de esos orígenes, sin `{tenant}` (§9), y de ella sale `frame-ancestors`.
 2. **Operaciones de `needs_from_pimia`.** El token de módulo solo abre en el ERP su propio estado (§4.2). Si el
    backend del módulo necesita leer datos de Pimia (clientes, facturas), hace falta un canje de token con esa
    audiencia y esos scopes. No se ha diseñado: es del frente ERP.

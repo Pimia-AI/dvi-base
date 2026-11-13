@@ -26,6 +26,13 @@ el secreto `DVI_CI_TOKEN` (un principal del DVI con `leer` y `publicar` sobre la
 `DVI_VERTICAL` y `DVI_ENTREGABLE_ID`. En el servidor, la lectura del registro es el token personal del integrador (su
 `docker login ghcr.io`, con caducidad; ver la receta del servidor del DVI).
 
+El `.env` del servidor sale de [`.env.example`](.env.example). `PIMIA_HOST_ORIGINS` es la **lista exacta** de anfitriones
+que pueden embeber las pantallas, separados por comas: el panel de Pimia del entorno y, cuando exista, la app de tu
+producto (`https://app.<dominio>`). Al cambiarla, recrea el contenedor del módulo y comprueba la cabecera de una pantalla
+con un GET: `curl -s -o /dev/null -D - https://<origen del módulo>/app/<pantalla>`. Su `Content-Security-Policy` dice
+`frame-ancestors` con esos orígenes. Con `curl -I` no se ve: las pantallas solo admiten GET y a un HEAD responden `405`
+con las cabeceras de la API (`frame-ancestors 'none'`).
+
 ## Licencia de tu módulo
 
 El código que escribas para este módulo es tuyo y lo licencias como quieras: pon tu propio `LICENSE` en la raíz del repositorio de la vertical (el campo `license` de `package.json` apunta a él). Las partes que procedan de dvi-base (los paquetes `@dvi-base/*` y lo que copies de la base) siguen bajo la Licencia del Ecosistema Pimia (cláusula 4).
