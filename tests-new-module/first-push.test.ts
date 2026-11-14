@@ -15,28 +15,17 @@
  */
 import { test, after } from 'node:test'
 import assert from 'node:assert/strict'
-import { execFileSync, spawnSync } from 'node:child_process'
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { join } from 'node:path'
 import { readModuleConfig } from '../packages/module/src/config'
+import { jsonLines, snapshot } from './helpers'
 
-const REPO = join(import.meta.dirname, '..')
 const KEY = 'smoke-tasks'
 const PACKAGE = `@dvi-modules/${KEY}`
 const work = mkdtempSync(join(tmpdir(), 'dvi-first-push-'))
 after(() => rmSync(work, { recursive: true, force: true }))
-
-/** Una copia del árbol de trabajo de dvi-base tal como lo vería un clon: lo versionado y lo nuevo no ignorado. */
-function snapshot(dest: string): string {
-  const files = execFileSync('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard'], { cwd: REPO, encoding: 'utf8' }).split('\0').filter(Boolean)
-  for (const file of files) {
-    if (!existsSync(join(REPO, file))) continue
-    mkdirSync(dirname(join(dest, file)), { recursive: true })
-    cpSync(join(REPO, file), join(dest, file))
-  }
-  return dest
-}
 
 function run(command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv = {}) {
   const result = spawnSync(command, args, { cwd, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, env: { ...process.env, ...env } })
@@ -44,7 +33,6 @@ function run(command: string, args: string[], cwd: string, env: NodeJS.ProcessEn
   assert.equal(result.status, 0, `${command} ${args.join(' ')} (en ${cwd}):\n${output.trim().split('\n').slice(-15).join('\n')}`)
   return result.stdout
 }
-const jsonLines = (text: string) => text.trim().split('\n').filter(text => text.startsWith('{')).map(text => JSON.parse(text))
 const lockPins = (lock: { packages: Record<string, Record<string, unknown>> }) => Object.fromEntries(Object.entries(lock.packages)
   .filter(([key]) => key !== '' && !key.startsWith('examples/') && !key.startsWith('node_modules/@dvi-modules/'))
   .map(([key, entry]) => [key, { version: entry.version, resolved: entry.resolved, integrity: entry.integrity, link: entry.link }]))

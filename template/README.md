@@ -34,8 +34,11 @@ con un GET: `curl -s -o /dev/null -D - https://<origen del módulo>/app/<pantall
 con las cabeceras de la API (`frame-ancestors 'none'`).
 
 La CI mete el módulo en `__DIR__` sobre dvi-base recién clonado, cuyo `package-lock.json` no lo conoce. El `Dockerfile` lo
-añade antes de `npm ci` con `packages/module/bin/module-lock.mjs`, que no deja cambiar nada de lo que la base fija; por eso
-el primer push a `main` de un módulo recién creado construye sin tocar nada. Si `DVI_BASE_REF` apunta a un commit de
+añade antes de `npm ci` con `packages/module/bin/module-lock.mjs`; por eso el primer push a `main` de un módulo recién
+creado construye sin tocar nada. Sus reglas: nada de lo que la base fija cambia ni se sombrea con otra copia (ningún
+`@dvi-base/*` ni otra versión de un paquete de la base debajo del módulo); toda dependencia nueva viene del registro
+público de npm (`https://registry.npmjs.org/`) con su `integrity`, sin `file:`, git, otros hosts ni carpetas enlazadas; y
+la salida lista todas las entradas nuevas del lock. Si `DVI_BASE_REF` apunta a un commit de
 dvi-base sin ese fichero, la construcción falla: usa uno más reciente.
 
 ## La carpeta `.dvi/`
