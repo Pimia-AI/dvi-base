@@ -14,5 +14,5 @@
     "types": ["node"],
     "jsx": "react-jsx"
   },
-  "include": ["packages/*/src", "packages/*/tests", "packages/*/tests-db", "packages/*/showcase", "examples/*/src", "examples/*/scripts", "tests"]
+  "include": ["packages/*/src", "packages/*/tests", "packages/*/tests-db", "packages/*/showcase", "examples/*/src", "examples/*/scripts", "tests", "tests-new-module"]
 }

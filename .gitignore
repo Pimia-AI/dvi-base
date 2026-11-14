@@ -6,4 +6,5 @@ dist/
 !.env.ejemplo
 !.env.example
 .DS_Store
-.dvi/
+**/.dvi/*
+!**/.dvi/documentos.yml

@@ -11,6 +11,7 @@
   "scripts": {
     "test": "node --import tsx --test \"tests/**/*.test.ts\" \"packages/*/tests/**/*.test.ts\" \"packages/*/tests/**/*.test.tsx\" \"examples/*/tests/**/*.test.ts\"",
     "test:db": "node --import tsx packages/module/src/testing/with-postgres.ts \"packages/*/tests-db/**/*.test.ts\"",
+    "test:new-module": "node --import tsx --test \"tests-new-module/**/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "up": "npm run -s up --prefix examples/notes",
     "down": "npm run -s down --prefix examples/notes",

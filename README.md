@@ -24,7 +24,9 @@ npm run down     # parar y borrar
 
 Al terminar, `npm run up` dice la URL del anfitrión (`http://127.0.0.1:7161/m/dvi-base-notes/notes`).
 
-Para trabajar en la base: `npm install`, `npm test` (pruebas unitarias) y `npm run test:db` (con un PostgreSQL efímero en Docker).
+Para trabajar en la base: `npm install`, `npm test` (pruebas unitarias), `npm run test:db` (con un PostgreSQL efímero en Docker) y
+`npm run test:new-module` (un módulo nuevo desde la plantilla, montado como lo monta su CI, instala y construye; con
+`DVI_CHECK_IMAGE=1`, también su imagen). La CI de la base (`.github/workflows/ci.yml`) las ejecuta todas.
 
 ## Una vertical de módulo, paso a paso
 
@@ -36,7 +38,8 @@ Para trabajar en la base: `npm install`, `npm test` (pruebas unitarias) y `npm r
    - un `compose.yaml` para el arranque local;
    - un `AGENTS.md` para el agente que lo construye.
 2. **Construir el dominio** en el módulo: tablas en `migrations/` (nombres `0001_nombre.sql`), rutas y pantallas con el kit. Se prueba en local contra el doble de Pimia (`npm run up` desde la carpeta del módulo).
-3. **Darle su repositorio.** La raíz del módulo es la raíz del repositorio de la vertical: `module.json` y `migrations/` en la raíz, donde los lee el panel de verticales del integrador.
+3. **Darle su repositorio.** La raíz del módulo es la raíz del repositorio de la vertical: `module.json` y `migrations/` en la raíz, donde los lee el panel de verticales del integrador. Con la variable `DVI_BASE_REF` puesta (el commit de tu clon de dvi-base), el primer push a `main` ya construye: la CI mete el módulo sobre dvi-base y su `Dockerfile` lo añade al `package-lock.json` de la base sin mover nada de lo que esta fija.
+   En `.dvi/` solo se versiona `.dvi/documentos.yml` (la convención de documentos del taller); lo demás, como `.dvi/local.env`, es local.
 4. **Crear una versión con una etiqueta de Git.** Las versiones las define el integrador: cuando el trabajo está listo para entregarse, marca el commit con una etiqueta `v*` y la empuja:
 
    ```sh

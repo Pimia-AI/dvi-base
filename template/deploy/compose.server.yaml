@@ -5,7 +5,8 @@
 # del módulo es `<proyecto>-module-1` (el `container` del módulo en la configuración del ejecutor). Junto a este fichero va
 # postgres-init.sh, copia de packages/module/assets/postgres-init.sh de dvi-base: el servidor no necesita el código.
 # En .env (0640 root:dvi-executor, generado en el servidor): DVI_POSTGRES_PASSWORD, DVI_OWNER_PASSWORD, DVI_RUNTIME_PASSWORD,
-# PIMIA_BASE_URL, PIMIA_TENANT_ID, PIMIA_HOST_ORIGINS y MODULE_PORT (el puerto de 127.0.0.1 que sirve el proxy).
+# PIMIA_BASE_URL, PIMIA_HOST_ORIGINS y MODULE_PORT (el puerto de 127.0.0.1 que sirve el proxy). PIMIA_TENANT_ID solo con
+# una dirección fija de una sola instancia: con el patrón https://{tenant}.<dominio> va vacía (ver .env.example).
 x-module-image: &module_image ${DVI_IMAGE:?la pone el ejecutor (<repositorio>@sha256:…)}
 x-database: &database
   DATABASE_URL: postgresql://__SCHEMA___runtime:${DVI_RUNTIME_PASSWORD:?falta .env}@postgres:5432/__SCHEMA__
@@ -47,7 +48,7 @@ services:
     environment:
       <<: *database
       PIMIA_BASE_URL: ${PIMIA_BASE_URL:?falta .env}
-      PIMIA_TENANT_ID: ${PIMIA_TENANT_ID:?falta .env}
+      PIMIA_TENANT_ID: ${PIMIA_TENANT_ID:-}
       PIMIA_HOST_ORIGINS: ${PIMIA_HOST_ORIGINS:?falta .env}
     read_only: true
     tmpfs: [/tmp]

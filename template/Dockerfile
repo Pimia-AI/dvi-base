@@ -8,7 +8,9 @@ WORKDIR /app
 
 FROM node24 AS build
 COPY . .
-RUN --mount=type=secret,id=npmrc,target=/root/.npmrc npm ci --no-audit --no-fund
+# El lock de dvi-base no conoce este módulo cuando la CI lo mete en examples/ sobre una base recién clonada: module-lock
+# lo añade sin mover nada de lo que la base fija, y después `npm ci` instala exactamente eso.
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc node packages/module/bin/module-lock.mjs && npm ci --no-audit --no-fund
 RUN npm run -s build:ui --workspace __PACKAGE__ \
  && npm run -s build --workspace @dvi-base/dev-host \
  && node --import tsx packages/module/src/build-module.ts __DIR__ /out

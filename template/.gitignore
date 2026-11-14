@@ -1,4 +1,5 @@
-.dvi/
+.dvi/*
+!.dvi/documentos.yml
 dist/
 node_modules/
 .env
