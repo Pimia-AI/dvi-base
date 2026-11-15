@@ -10,6 +10,15 @@ npm run down     # parar y borrar
 npm run image    # imagen de producción
 ```
 
+## El dueño del módulo: `owner` en `module.json`
+
+`owner` es el **nombre de integrador en Pimia** de quien publica el módulo. La persona lo ve en el taller, en **Cuenta →
+«Tu cuenta de Pimia» → «Nombre de integrador en Pimia»**; con el taller enlazado a la cuenta de Pimia es también el nombre
+del integrador en el taller. Se pone al crear el módulo (`npm run new-module -- <clave> --owner <nombre de integrador>`)
+o se cambia aquí antes de la primera versión. El valor por defecto, `dvi-base`, solo vale para el doble de Pimia del
+arranque local. Con `key`, forma la audiencia del token de módulo (`<owner>/<key>`): si `owner` no es el nombre de
+integrador de la cuenta, Pimia no registra el módulo y hace falta otra versión con el `module.json` corregido.
+
 ## La imagen de producción, por CI (cuando este módulo es la raíz de su repositorio)
 
 Una versión nace cuando marcas un commit con una etiqueta `v*` y la empujas (`git tag v5` y `git push origin v5`). Los
@@ -19,7 +28,8 @@ Con la etiqueta, `.github/workflows/dvi-image.yml` construye la imagen del commi
 `BUILD_REVISION` = el commit), la publica en GHCR (privada, con el `GITHUB_TOKEN` del flujo) y deja su digest como nombre de
 artefacto; `.github/workflows/dvi-register.yml` la registra en el DVI como la construcción de la versión de ese commit, con la
 etiqueta en su nota (docs/api.md §22 del DVI). En el servidor, `deploy/compose.server.yaml` arranca exactamente ese digest
-con el `dvi-executor`.
+con el `dvi-executor`. El contenedor del módulo se llama `<proyecto>-module-1` (`<proyecto>` es el `-p` del gancho del
+ejecutor) y ese es el `container` del módulo en la configuración del ejecutor; no le pongas `container_name`.
 
 Hace falta en el repositorio solo la variable `DVI_BASE_REF` (el commit de dvi-base, que es público y se clona sin
 credencial: el de tu clon de dvi-base al crear el módulo, `git rev-parse HEAD`). `dvi-register.yml` registra **sin clave**:
@@ -52,7 +62,10 @@ dvi-base sin ese fichero, la construcción falla: usa uno más reciente.
 ## La carpeta `.dvi/`
 
 Solo se versiona `.dvi/documentos.yml`, la convención con la que el taller lee los documentos de la vertical (entrevistas,
-requisitos…). Lo demás de `.dvi/` es local y git lo ignora: ahí guarda `npm run up` las contraseñas de `.dvi/local.env`.
+requisitos…). La plantilla trae un ejemplo válido, con la forma explicada en sus comentarios: adáptalo a tus carpetas. Dos
+errores que el taller no avisa: `ficheros` es **un** patrón entre comillas (`ficheros: "*.md"`; con `["*.md"]` no casa
+con nada y la entrada no lista ningún documento), y `excluir` lleva nombres exactos (un patrón no excluye nada). Lo demás de `.dvi/` es local y git lo ignora: ahí guarda
+`npm run up` las contraseñas de `.dvi/local.env`.
 
 ## Licencia de tu módulo
 

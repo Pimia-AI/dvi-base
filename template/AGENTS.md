@@ -8,12 +8,13 @@ interfaz y el arranque local. **Tú escribes solo el dominio**: sus tablas, sus 
 
 | Carpeta o fichero | De quién | Qué va ahí |
 | --- | --- | --- |
-| `module.json` | tuyo | Clave (`key`, la que lleva el plan en Pimia), nombre, esquema y pantallas del módulo |
+| `module.json` | tuyo | Dueño (`owner`, el nombre de integrador en Pimia: ver el README), clave (`key`, la que lleva el plan en Pimia), nombre, esquema y pantallas del módulo |
 | `migrations/0001_nombre.sql`… | tuyo | Las tablas del dominio, en orden y sin huecos. Una migración aplicada **no se edita nunca**: se añade otra |
 | `seeds/0001_nombre.sql`… | tuyo | Datos de ejemplo para el arranque local (instancia `demo`, empresas 1, 2 y 3 del doble). Nunca llegan a producción |
 | `src/server/api.ts` y lo que importe | tuyo | La tabla de rutas (`/api/…`) y sus handlers |
 | `src/ui/` | tuyo | Las pantallas, en `/app/…`, hechas con `@dvi-base/kit` |
 | `tests/` | tuyo | Las pruebas del dominio |
+| `.dvi/documentos.yml` | tuyo | Qué documentos de la vertical lee el taller. Trae un ejemplo válido; su forma, en sus comentarios |
 | `src/server/main.ts`, `Dockerfile`, `compose.yaml`, `.mcp.json` | de la plantilla | No los cambies salvo que haga falta y lo sepa la persona que te dirige |
 | `@dvi-base/module`, `@dvi-base/kit`, `@dvi-base/pimia-double`, `@dvi-base/dev-host` | **de la base** | **No se tocan.** Si algo falta en la base, se pide (no se copia ni se parchea aquí) |
 

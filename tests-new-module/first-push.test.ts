@@ -42,8 +42,7 @@ const git = ['-c', 'user.name=dvi-base', '-c', 'user.email=ci@example.invalid', 
 const dev = snapshot(join(work, 'dev'))
 const created = jsonLines(run(process.execPath, ['packages/module/bin/new-module.mjs', KEY, '--owner', 'acme', '--name', 'Tareas de prueba', '--no-install'], dev))
 const vertical = join(dev, 'examples', KEY)
-mkdirSync(join(vertical, '.dvi'))
-writeFileSync(join(vertical, '.dvi', 'documentos.yml'), 'schema_version: 1\nvertical: smoke\ndocumentos:\n  - carpeta: docs\n    tipo: otro\n')
+// La plantilla ya trae .dvi/documentos.yml; los secretos locales los deja `npm run up` (y el servidor, su .env).
 writeFileSync(join(vertical, '.dvi', 'local.env'), 'DVI_POSTGRES_PASSWORD=solo-local\n')
 writeFileSync(join(vertical, '.env'), 'DVI_RUNTIME_PASSWORD=solo-servidor\n')
 run('git', [...git, 'init', '-q'], vertical)

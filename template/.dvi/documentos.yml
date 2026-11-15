@@ -1,0 +1,20 @@
+# Los documentos de la vertical que lee el taller (entrevistas, requisitos, decisiones…), en la rama por defecto.
+# El lector es cerrado a esta forma: cualquier otra clave o forma es un error, y el taller lo dice con la línea y el motivo:
+#   - schema_version: 1, y documentos: una lista; vertical (la clave de la vertical en el taller) es opcional.
+#   - cada entrada empieza con «  - » (dos espacios) y sus campos van con cuatro espacios.
+#   - carpeta: relativa a la raíz del repositorio, sin «..» (vacía o «.» es la raíz).
+#   - tipo: en minúsculas (letras, cifras, «-» y «_»).
+#   - ficheros: UN patrón, entre comillas, relativo a la carpeta. «*» y «?» no cruzan «/»; «**» cruza carpetas.
+#     No es una lista: ficheros: ["*.md"] no casa con nada.
+#   - excluir (opcional): una lista en una línea de nombres exactos, sin patrones: la ruta relativa a la carpeta o
+#     el nombre del fichero. excluir: ["*.md"] no excluye nada.
+# Un fichero que casa con dos entradas se queda con el tipo de la primera.
+schema_version: 1
+documentos:
+  - carpeta: docs/entrevistas
+    tipo: entrevista
+    ficheros: "*.md"
+  - carpeta: docs
+    tipo: requisitos
+    ficheros: "*.md"
+    excluir: [README.md]

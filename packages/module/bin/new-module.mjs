@@ -6,8 +6,9 @@
  *   <nombre>        en minúsculas, cifras y guiones (2 a 40). Es la clave del módulo en Pimia (`module.json` → `key`),
  *                   el nombre de su paquete y, con `_` en vez de `-`, su esquema en PostgreSQL.
  *   --name "Texto"  el nombre que ve una persona (por defecto, el nombre con mayúscula inicial).
- *   --owner <cuenta> la cuenta de integrador de Pimia ERP dueña del módulo (`module.json` → `owner`; con `key`, la
- *                   audiencia del token de módulo). Por defecto, `dvi-base`: vale para el doble; cámbiala al registrarlo.
+ *   --owner <cuenta> el nombre de integrador en Pimia de quien publica el módulo (`module.json` → `owner`; con `key`, la
+ *                   audiencia del token de módulo; en el taller, Cuenta → «Tu cuenta de Pimia»). Por defecto, `dvi-base`:
+ *                   vale para el doble; cámbialo antes de la primera versión.
  *   --no-install    no ejecuta `npm install` (los workspaces no lo verán hasta que se haga).
  *   --root <dir>    el repo de destino (por defecto, la carpeta actual).
  */

@@ -30,7 +30,7 @@ Para trabajar en la base: `npm install`, `npm test` (pruebas unitarias), `npm ru
 
 ## Una vertical de módulo, paso a paso
 
-1. **Crear el módulo** desde la plantilla: `npm run new-module -- <clave> --owner <cuenta-del-integrador> --name "Nombre visible"`. Queda en `examples/<clave>`, con:
+1. **Crear el módulo** desde la plantilla: `npm run new-module -- <clave> --owner <nombre de integrador en Pimia> --name "Nombre visible"`. El nombre de integrador lo ve la persona en el taller, en Cuenta → «Tu cuenta de Pimia». Queda en `examples/<clave>`, con:
    - `module.json`: dueño, clave, esquema y ámbitos;
    - `migrations/` y `seeds/`;
    - las pantallas, en `src/ui`;
@@ -39,7 +39,7 @@ Para trabajar en la base: `npm install`, `npm test` (pruebas unitarias), `npm ru
    - un `AGENTS.md` para el agente que lo construye.
 2. **Construir el dominio** en el módulo: tablas en `migrations/` (nombres `0001_nombre.sql`), rutas y pantallas con el kit. Se prueba en local contra el doble de Pimia (`npm run up` desde la carpeta del módulo).
 3. **Darle su repositorio.** La raíz del módulo es la raíz del repositorio de la vertical: `module.json` y `migrations/` en la raíz, donde los lee el panel de verticales del integrador. Con la variable `DVI_BASE_REF` puesta (el commit de tu clon de dvi-base), el primer push a `main` ya construye: la CI mete el módulo sobre dvi-base y su `Dockerfile` lo añade al `package-lock.json` de la base sin mover nada de lo que esta fija.
-   En `.dvi/` solo se versiona `.dvi/documentos.yml` (la convención de documentos del taller); lo demás, como `.dvi/local.env`, es local.
+   En `.dvi/` solo se versiona `.dvi/documentos.yml` (la convención de documentos del taller; la plantilla trae un ejemplo válido); lo demás, como `.dvi/local.env`, es local.
 4. **Crear una versión con una etiqueta de Git.** Las versiones las define el integrador: cuando el trabajo está listo para entregarse, marca el commit con una etiqueta `v*` y la empuja:
 
    ```sh

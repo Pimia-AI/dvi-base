@@ -2,7 +2,8 @@
 # docs/receta-servidor-integrador.md §2.1). Se copia a /opt/<proyecto>/compose.yaml, uno por destino (desarrollo, piloto,
 # producción). La imagen la fija el ejecutor por digest (DVI_IMAGE = <repositorio>@sha256:…); el gancho arranca sin construir
 # ni descargar: `docker compose -p <proyecto> --project-directory /opt/<proyecto> up -d --no-build --pull never`. El contenedor
-# del módulo es `<proyecto>-module-1` (el `container` del módulo en la configuración del ejecutor). Junto a este fichero va
+# del módulo es `<proyecto>-module-1` (el `container` del módulo en la configuración del ejecutor; por eso el servicio no
+# lleva container_name). Junto a este fichero va
 # postgres-init.sh, copia de packages/module/assets/postgres-init.sh de dvi-base: el servidor no necesita el código.
 # En .env (0640 root:dvi-executor, generado en el servidor): DVI_POSTGRES_PASSWORD, DVI_OWNER_PASSWORD, DVI_RUNTIME_PASSWORD,
 # PIMIA_BASE_URL, PIMIA_HOST_ORIGINS y MODULE_PORT (el puerto de 127.0.0.1 que sirve el proxy). PIMIA_TENANT_ID solo con

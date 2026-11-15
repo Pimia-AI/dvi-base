@@ -25,7 +25,8 @@ test('crea el módulo con todo sustituido: clave, nombre, esquema, carpeta y paq
   const dir = join(root, 'examples', 'gestion-obras')
   const files = walk(dir).map(file => relative(dir, file)).sort()
   for (const expected of ['AGENTS.md', 'README.md', '.mcp.json', '.gitignore', 'module.json', 'package.json', 'Dockerfile', 'compose.yaml', 'migrations/.gitkeep', 'seeds/.gitkeep',
-    'src/server/main.ts', 'src/server/api.ts', 'src/ui/main.tsx', 'src/ui/screens.tsx', 'src/ui/index.html', 'src/ui/styles.css', 'src/ui/vite.config.ts', 'tests/module.test.ts']) {
+    'src/server/main.ts', 'src/server/api.ts', 'src/ui/main.tsx', 'src/ui/screens.tsx', 'src/ui/index.html', 'src/ui/styles.css', 'src/ui/vite.config.ts', 'tests/module.test.ts',
+    '.dvi/documentos.yml']) {
     assert.ok(files.includes(expected), expected)
   }
   for (const file of walk(dir)) assert.doesNotMatch(readFileSync(file, 'utf8'), /__(OWNER|KEY|NAME|SCHEMA|DIR|PACKAGE)__/, file)
@@ -36,6 +37,10 @@ test('crea el módulo con todo sustituido: clave, nombre, esquema, carpeta y paq
   const compose = readFileSync(join(dir, 'compose.yaml'), 'utf8')
   assert.match(compose, /MODULE_OWNER: acme/); assert.match(compose, /^name: gestion-obras$/m); assert.match(compose, /gestion_obras_runtime:/); assert.match(compose, /dockerfile: examples\/gestion-obras\/Dockerfile/)
   assert.match(readFileSync(join(dir, 'AGENTS.md'), 'utf8'), /# Reglas para el agente que trabaja en el módulo «Gestión de obras»/)
+  // El ejemplo de la convención de documentos, con la forma cerrada que lee el taller: `ficheros` es un patrón, no una lista.
+  const documents = readFileSync(join(dir, '.dvi', 'documentos.yml'), 'utf8').split('\n').filter(text => text.trim() !== '' && !text.startsWith('#'))
+  assert.equal(documents[0], 'schema_version: 1'); assert.equal(documents[1], 'documentos:')
+  for (const text of documents.slice(2)) assert.match(text, /^(  - carpeta: [a-z0-9/._-]+|    tipo: [a-z][a-z0-9_-]*|    ficheros: "[^"[\]]+"|    excluir: \[[^\]*]*\])$/, text)
 })
 
 test('no pisa un módulo que ya existe, y los nombres malos no pasan', () => {
