@@ -21,10 +21,18 @@ artefacto; `.github/workflows/dvi-register.yml` la registra en el DVI como la co
 etiqueta en su nota (docs/api.md §22 del DVI). En el servidor, `deploy/compose.server.yaml` arranca exactamente ese digest
 con el `dvi-executor`.
 
-Hace falta en el repositorio: la variable `DVI_BASE_REF` (el commit de dvi-base, que es público y se clona sin credencial:
-el de tu clon de dvi-base al crear el módulo, `git rev-parse HEAD`), el secreto `DVI_CI_TOKEN` (un principal del DVI con
-`leer` y `publicar` sobre la vertical) y las variables `DVI_URL`, `DVI_VERTICAL` y `DVI_ENTREGABLE_ID`. En el servidor, la lectura del registro es el token personal del integrador (su
-`docker login ghcr.io`, con caducidad; ver la receta del servidor del DVI).
+Hace falta en el repositorio solo la variable `DVI_BASE_REF` (el commit de dvi-base, que es público y se clona sin
+credencial: el de tu clon de dvi-base al crear el módulo, `git rev-parse HEAD`). `dvi-register.yml` registra **sin clave**:
+pide el token OIDC de GitHub Actions (`permissions: id-token: write`) con la audiencia que dice el DVI en `GET /v1/salud`
+(`ci_oidc.audience`) y el DVI deduce la vertical y el entregable del repositorio (docs/api.md §30 del DVI). Para eso tiene
+que existir, en el DVI, este repositorio **vinculado a su vertical como el repositorio del módulo** y **accesible para la
+App de GitHub del DVI**. Nada más: ni secretos ni variables de vertical o entregable.
+
+Opcionales: la variable `DVI_URL` (la URL de la API del DVI terminada en `/v1`; por defecto, `https://dvi-api.taskai.work/v1`)
+y `DVI_ENTREGABLE_ID`, solo si el DVI responde que el repositorio sirve a más de un entregable (`409 ci_target_ambiguous`).
+Un repositorio que ya tiene el secreto `DVI_CI_TOKEN` (un principal del DVI con `leer` y `publicar` sobre la vertical)
+sigue con esa vía, con las variables `DVI_VERTICAL` y `DVI_ENTREGABLE_ID`, como antes. En el servidor, la lectura del
+registro es el token personal del integrador (su `docker login ghcr.io`, con caducidad; ver la receta del servidor del DVI).
 
 El `.env` del servidor sale de [`.env.example`](.env.example). `PIMIA_HOST_ORIGINS` es la **lista exacta** de anfitriones
 que pueden embeber las pantallas, separados por comas: el panel de Pimia del entorno y, cuando exista, la app de tu

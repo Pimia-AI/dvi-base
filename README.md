@@ -49,7 +49,7 @@ Para trabajar en la base: `npm install`, `npm test` (pruebas unitarias), `npm ru
 
    Los commits a `main` sin etiqueta no crean nada en el panel de verticales: solo se comprueba que la imagen construye. Al empujar la etiqueta, la plantilla hace dos cosas con sus dos flujos de GitHub Actions:
    - `.github/workflows/dvi-image.yml` construye la imagen de producción del commit etiquetado (target `module`, con `BUILD_REVISION` igual al commit) sobre esta base en el commit fijado, la publica en GHCR como paquete privado del repositorio y deja su digest;
-   - `.github/workflows/dvi-register.yml` la registra como la construcción de la versión de ese commit, con la etiqueta en su nota («versión 5 · v5»).
+   - `.github/workflows/dvi-register.yml` la registra como la construcción de la versión de ese commit, con la etiqueta en su nota («versión 5 · v5»). Lo hace **sin clave**: se identifica ante el panel de verticales con el token OIDC de GitHub Actions, y el panel deduce la vertical y el entregable del repositorio. Para que funcione solo tiene que existir el repositorio **vinculado a su vertical en el panel como el repositorio del módulo** y **accesible para la App de GitHub del panel**: ni secretos ni variables de vertical o entregable.
 
    Cada versión es una imagen fija: un commit, un digest.
 5. **Desplegar por digest** en el servidor del integrador: `deploy/compose.server.yaml` arranca exactamente la imagen `<repositorio>@sha256:…` que le indica el ejecutor de entregas, con la credencial de lectura del registro del propio integrador. El mismo digest en desarrollo, piloto y producción.

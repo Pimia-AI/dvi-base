@@ -1,14 +1,21 @@
-# Registra en el DVI la construcción de dvi-image (docs/api.md §22.4), SOLO de una versión: cuando dvi-image termina con
-# éxito tras empujar una etiqueta `v*` (el DVI exige la ejecución terminada), lee el digest del nombre de su artefacto,
-# registra la versión del commit etiquetado con la etiqueta en su nota (o toma la que ya existe) y registra el suceso
-# `construido` con `build.image`. El DVI lo comprueba en GitHub y lee las migraciones en el commit. Un push a main sin
-# etiqueta no registra nada.
+# Registra en el taller (el DVI) la construcción de dvi-image, SOLO de una versión: cuando dvi-image termina con éxito tras
+# empujar una etiqueta `v*` (el taller exige la ejecución terminada), lee el digest del nombre de su artefacto y registra la
+# versión del commit etiquetado, con la etiqueta en su nota, como construida con esa imagen. El taller lo comprueba en GitHub
+# con su App (la ejecución, el commit, el artefacto y que sea un push de esa etiqueta en este repositorio) y lee las
+# migraciones en el commit. Un push a main sin etiqueta no registra nada.
 #
-# Necesita:
-# - el secreto DVI_CI_TOKEN: el token de un principal del DVI emitido para esto, con `leer` y `publicar` sobre la vertical y
-#   nada más (sin entornos). Nunca sale del almacén de secretos: solo va en la cabecera, desde un fichero 0600;
-# - las variables del repositorio DVI_URL (la URL de la API del DVI, terminada en /v1), DVI_VERTICAL (la clave de la vertical) y
-#   DVI_ENTREGABLE_ID (el entregable modulo_backend del módulo). No son secretos.
+# Sin clave (docs/api.md §30 del DVI): se identifica con el token OIDC de GitHub Actions (`id-token: write`), pedido con la
+# audiencia del taller (la que dice GET <DVI_URL>/salud en ci_oidc.audience). El taller deduce la vertical y el entregable
+# del repositorio. Lo único que tiene que existir:
+# - este repositorio vinculado a su vertical en el taller como el repositorio del módulo;
+# - la App de GitHub del taller con acceso a este repositorio.
+# Ni secretos ni variables de vertical o entregable. Opcionales: la variable DVI_URL (la URL de la API del taller, terminada
+# en /v1; por defecto, https://dvi-api.taskai.work/v1) y DVI_ENTREGABLE_ID, solo si el taller dice que el repositorio sirve a
+# más de un entregable (409 ci_target_ambiguous).
+#
+# La vía antigua sigue: si el repositorio tiene el secreto DVI_CI_TOKEN (el token de un principal del taller con `leer` y
+# `publicar` sobre la vertical), se usa ese token con las variables DVI_VERTICAL y DVI_ENTREGABLE_ID, como antes. Nunca sale
+# del almacén de secretos: solo va en la cabecera, desde un fichero 0600.
 name: dvi-register
 
 on:
@@ -19,6 +26,8 @@ on:
 permissions:
   actions: read
   contents: read
+  # Solo para pedir el token OIDC con la audiencia del taller; no da permiso de escritura sobre nada.
+  id-token: write
 
 jobs:
   register:
@@ -27,11 +36,11 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
-      DVI_URL: ${{ vars.DVI_URL }}
+      DVI_URL: ${{ vars.DVI_URL || 'https://dvi-api.taskai.work/v1' }}
       DVI_VERTICAL: ${{ vars.DVI_VERTICAL }}
       DVI_ENTREGABLE_ID: ${{ vars.DVI_ENTREGABLE_ID }}
     steps:
-      - name: Registrar la construcción en el DVI
+      - name: Registrar la construcción en el taller
         env:
           GH_TOKEN: ${{ github.token }}
           DVI_CI_TOKEN: ${{ secrets.DVI_CI_TOKEN }}
@@ -40,22 +49,49 @@ jobs:
           TAG: ${{ github.event.workflow_run.head_branch }}
         run: |
           set -euo pipefail
-          for v in DVI_URL DVI_VERTICAL DVI_ENTREGABLE_ID DVI_CI_TOKEN; do test -n "${!v}" || { echo "Falta $v"; exit 1; }; done
+          test -n "$DVI_URL" || { echo "Falta DVI_URL"; exit 1; }
           [[ "$TAG" =~ ^v[0-9A-Za-z._-]{1,60}$ ]] || { echo "No es una etiqueta de versión: $TAG"; exit 1; }
+          [[ "$COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo "No es un commit: $COMMIT"; exit 1; }
           umask 077
-          hdr="$(mktemp)"; trap 'rm -f "$hdr"' EXIT
-          printf 'authorization: Bearer %s\n' "$DVI_CI_TOKEN" > "$hdr"
-          unset DVI_CI_TOKEN
+          hdr="$(mktemp)"; resp="$(mktemp)"; trap 'rm -f "$hdr" "$resp"' EXIT
           dvi() { # dvi <método> <ruta> [cuerpo] → imprime el código HTTP en la primera línea y el cuerpo después
-            curl -sS -o /tmp/dvi-body -w '%{http_code}\n' -X "$1" -H @"$hdr" -H 'content-type: application/json' \
-              ${3:+--data "$3"} "$DVI_URL$2"; cat /tmp/dvi-body; echo; }
+            curl -sS -o "$resp" -w '%{http_code}\n' -X "$1" -H @"$hdr" -H 'content-type: application/json' \
+              ${3:+--data "$3"} "$DVI_URL$2"; cat "$resp"; echo; }
+          fallo() { echo "$1 ($2): $(jq -c '{error, message, detalle}' <<<"$3" 2>/dev/null || echo "$3")"; exit 1; }
 
           name="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts" --jq \
             '[.artifacts[].name | select(test("^dvi-image-sha256-[0-9a-f]{64}$"))] | if length == 1 then .[0] else error("se esperaba un artefacto dvi-image-sha256-<hex>") end')"
           digest="sha256:${name#dvi-image-sha256-}"
           repository="ghcr.io/${GITHUB_REPOSITORY,,}"
-          base="/verticales/$DVI_VERTICAL/entregables/$DVI_ENTREGABLE_ID"
           echo "Versión $TAG: imagen $repository@$digest, commit $COMMIT, ejecución $RUN_ID"
+
+          if [ -z "${DVI_CI_TOKEN:-}" ]; then
+            # Sin clave: el token OIDC de esta ejecución, con la audiencia que dice el taller.
+            salud="$(curl -sS "$DVI_URL/salud")" || { echo "El taller no responde en $DVI_URL"; exit 1; }
+            aud="$(jq -r '.ci_oidc.audience // empty' <<<"$salud" 2>/dev/null || true)"
+            [ -n "$aud" ] || { echo "El taller ($DVI_URL) no acepta todavía la CI sin clave (GET /salud sin ci_oidc): usa el secreto DVI_CI_TOKEN con DVI_VERTICAL y DVI_ENTREGABLE_ID"; exit 1; }
+            [ -n "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ] && [ -n "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}" ] || { echo "Este job no puede pedir el token OIDC: falta permissions: id-token: write"; exit 1; }
+            jwt="$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$(jq -rn --arg a "$aud" '$a | @uri')" | jq -r '.value // empty')"
+            [ -n "$jwt" ] || { echo "GitHub no dio el token OIDC"; exit 1; }
+            echo "::add-mask::$jwt"
+            printf 'authorization: Bearer %s\n' "$jwt" > "$hdr"
+            unset jwt ACTIONS_ID_TOKEN_REQUEST_TOKEN
+            cuerpo="$(jq -nc --arg c "$COMMIT" --arg t "$TAG" --arg run "$RUN_ID" --arg d "$digest" --arg repo "$repository" --arg e "${DVI_ENTREGABLE_ID:-}" \
+              '{commit: $c, tag: $t, build: {ci: "github_actions", run_id: $run, digest: $d, image: {repository: $repo}}} + (if $e == "" then {} else {entregable_id: $e} end)')"
+            out="$(dvi POST /ci/github/builds "$cuerpo")"
+            code="$(head -1 <<<"$out")"; body="$(tail -n +2 <<<"$out")"
+            case "$code" in
+              201) echo "Construcción registrada: versión $(jq -r .version <<<"$body") · $TAG de $(jq -r .vertical.clave <<<"$body")/$(jq -r .entregable.clave <<<"$body"), $repository@$digest" >> "$GITHUB_STEP_SUMMARY"; exit 0 ;;
+              200) echo "La versión $(jq -r .version <<<"$body") ya tenía esta construcción" >> "$GITHUB_STEP_SUMMARY"; exit 0 ;;
+              *) fallo "El taller no registró la construcción" "$code" "$body" ;;
+            esac
+          fi
+
+          # La vía antigua, con la clave de un principal del taller.
+          for v in DVI_VERTICAL DVI_ENTREGABLE_ID; do test -n "${!v}" || { echo "Con DVI_CI_TOKEN, falta $v"; exit 1; }; done
+          printf 'authorization: Bearer %s\n' "$DVI_CI_TOKEN" > "$hdr"
+          unset DVI_CI_TOKEN
+          base="/verticales/$DVI_VERTICAL/entregables/$DVI_ENTREGABLE_ID"
 
           # La versión del commit etiquetado, con la etiqueta en su nota: nueva (201), la misma (200) o ya registrada con otra
           # nota o estado (409 con su número).
@@ -66,7 +102,7 @@ jobs:
             409) version="$(jq -r 'select(.error == "conflicto_idempotencia") | .detalle.version // empty' <<<"$body")" ;;
             *) version="" ;;
           esac
-          [[ "$version" =~ ^[0-9]+$ ]] || { echo "No se pudo registrar la versión ($code): $(jq -c '{error, message, detalle}' <<<"$body")"; exit 1; }
+          [[ "$version" =~ ^[0-9]+$ ]] || fallo "No se pudo registrar la versión" "$code" "$body"
           echo "Versión $version"
 
           # La construcción (§22.1). Si la versión ya tiene una, vale solo si es este mismo digest.
@@ -80,4 +116,4 @@ jobs:
             if [ "$ya" = "$digest" ]; then echo "La versión $version ya tenía esta construcción"; exit 0; fi
             echo "La versión $version ya tiene otra construcción (${ya:-ninguna con build}) o no admite una: no se registra"; exit 1
           fi
-          echo "El DVI no registró la construcción ($code): $(jq -c '{error, message, detalle}' <<<"$body")"; exit 1
+          fallo "El taller no registró la construcción" "$code" "$body"
